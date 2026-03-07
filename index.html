@@ -24,5 +24,20 @@
     </head>
     <body> 
         <canvas id="the_canvas_id"></canvas>
+        <script>
+              // Re-fire a resize event whenever zoom level changes
+              // (browser zoom changes devicePixelRatio)
+              let lastPixelRatio = window.devicePixelRatio;
+        
+              function checkZoom() {
+                if (window.devicePixelRatio !== lastPixelRatio) {
+                  lastPixelRatio = window.devicePixelRatio;
+                  window.dispatchEvent(new Event('resize'));
+                }
+              }
+        
+              // Poll for zoom changes (no native zoom event exists in browsers)
+              setInterval(checkZoom, 250);
+            </script>
     </body>
 </html>
