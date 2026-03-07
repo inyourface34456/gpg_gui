@@ -3,7 +3,7 @@ set -o errexit
 trunk build --release
 
 # Copy dist contents to a temp location
-cp -r dist/ /tmp/gh-pages-dist/
+cp dist/* /tmp/gh-pages-dist/
 
 # commit main so i doint acadently wipe miain branch
 git add .
