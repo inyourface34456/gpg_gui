@@ -13,4 +13,5 @@ cp -r /tmp/gh-pages-dist/* .
 git add .
 git commit -m "Deploy"
 git push origin gh-pages
+rm $(ls /tmp/gh-pages-dist)
 git checkout main
