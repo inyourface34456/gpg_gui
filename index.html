@@ -1,0 +1,52 @@
+<!--<link data-trunk rel="rust"/>
+<canvas id="the_canvas_id"></canvas>-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Wasm App</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+        
+              html, body {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+              }
+        
+              canvas {
+                display: block; /* removes inline whitespace gap below canvas */
+                width: 100% !important;
+                height: 100% !important;
+              }
+        </style>
+    <link rel="modulepreload" href="/gpg_gui-56fce6d2db24d835.js" crossorigin="anonymous" integrity="sha384-u4llClJbjoE+AkihSqJbZBrXGICF/35v+GaNJuxHTOIuiNsYhU2BO6DKm5BYswPq"><link rel="preload" href="/gpg_gui-56fce6d2db24d835_bg.wasm" crossorigin="anonymous" integrity="sha384-W6s2g4b4gK+8mllPYpyzSYPvvJsr4DoG55xTWWm+ZMFBky68y46p07THhYmZ0hSD" as="fetch" type="application/wasm"><link rel="modulepreload" href="/gpg_gui-56fce6d2db24d835.js" crossorigin="anonymous" integrity="sha384-u4llClJbjoE+AkihSqJbZBrXGICF/35v+GaNJuxHTOIuiNsYhU2BO6DKm5BYswPq"><link rel="preload" href="/gpg_gui-56fce6d2db24d835_bg.wasm" crossorigin="anonymous" integrity="sha384-W6s2g4b4gK+8mllPYpyzSYPvvJsr4DoG55xTWWm+ZMFBky68y46p07THhYmZ0hSD" as="fetch" type="application/wasm"></head>
+    <body>
+        <canvas id="the_canvas_id"></canvas>
+    
+<script type="module">
+import init, * as bindings from '/gpg_gui-56fce6d2db24d835.js';
+const wasm = await init({ module_or_path: '/gpg_gui-56fce6d2db24d835_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+<script type="module">
+import init, * as bindings from '/gpg_gui-56fce6d2db24d835.js';
+const wasm = await init({ module_or_path: '/gpg_gui-56fce6d2db24d835_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
