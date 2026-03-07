@@ -1,7 +1,14 @@
+set -o errexit
+
 trunk build --release
 
 # Copy dist contents to a temp location
 cp -r dist/ /tmp/gh-pages-dist/
+
+# commit main so i doint acadently wipe miain branch
+git add .
+git commit -m "Deploy"
+git push
 
 # Switch to gh-pages, wipe it, replace with new build
 git checkout gh-pages
