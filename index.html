@@ -21,13 +21,28 @@
                 height: 100% !important;
               }
         </style>
-    <link rel="modulepreload" href="/gpg_gui/gpg_gui-1fafc0ec1cabe449.js" crossorigin="anonymous" integrity="sha384-fDhcJqHQVRdYoT3bWcY4qEy4MDLDJBkzaacZAQSOKWhchsxjXLBbSshjySJzTbq8"><link rel="preload" href="/gpg_gui/gpg_gui-1fafc0ec1cabe449_bg.wasm" crossorigin="anonymous" integrity="sha384-NUiQAfS5KwT7JTniU/ZuRxkHSdS0WxWlvCrHge3a8CUT19ZDaCsxDPNWbsun4xaf" as="fetch" type="application/wasm"></head>
+    <link rel="modulepreload" href="/gpg_gui/gpg_gui-a3842b96a039bcb3.js" crossorigin="anonymous" integrity="sha384-fDhcJqHQVRdYoT3bWcY4qEy4MDLDJBkzaacZAQSOKWhchsxjXLBbSshjySJzTbq8"><link rel="preload" href="/gpg_gui/gpg_gui-a3842b96a039bcb3_bg.wasm" crossorigin="anonymous" integrity="sha384-3PtQXIYbx1dGwza6t+4Z9XlOxzCYUO4nwMiP4qVKXk/0QInYks7M0VaHFeW7AC/R" as="fetch" type="application/wasm"></head>
     <body> 
         <canvas id="the_canvas_id"></canvas>
+        <script>
+              // Re-fire a resize event whenever zoom level changes
+              // (browser zoom changes devicePixelRatio)
+              let lastPixelRatio = window.devicePixelRatio;
+        
+              function checkZoom() {
+                if (window.devicePixelRatio !== lastPixelRatio) {
+                  lastPixelRatio = window.devicePixelRatio;
+                  window.dispatchEvent(new Event('resize'));
+                }
+              }
+        
+              // Poll for zoom changes (no native zoom event exists in browsers)
+              setInterval(checkZoom, 250);
+            </script>
     
 <script type="module">
-import init, * as bindings from '/gpg_gui/gpg_gui-1fafc0ec1cabe449.js';
-const wasm = await init({ module_or_path: '/gpg_gui/gpg_gui-1fafc0ec1cabe449_bg.wasm' });
+import init, * as bindings from '/gpg_gui/gpg_gui-a3842b96a039bcb3.js';
+const wasm = await init({ module_or_path: '/gpg_gui/gpg_gui-a3842b96a039bcb3_bg.wasm' });
 
 
 window.wasmBindings = bindings;
