@@ -45,6 +45,9 @@ struct MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let pixels_per_point = ctx.pixels_per_point();
+        ctx.set_pixels_per_point(pixels_per_point);
+        
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Hello, egui!");
 
