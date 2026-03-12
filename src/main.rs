@@ -1,6 +1,9 @@
 use eframe::egui;
-// #[cfg(target_arch = "wasm32")]
-// use wasm_bindgen::prelude::wasm_bindgen;
+use sequoia_openpgp::Cert;
+use sequoia_openpgp::cert::CertParser;
+use sequoia_openpgp::parse::Parse;
+#[cfg(not(target_arch = "wasm32"))]
+use std::process::Command;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
@@ -37,11 +40,60 @@ fn main() {
     });
 }
 
-#[derive(Default)]
+#[cfg(not(target_arch = "wasm32"))]
+fn get_certs() -> Vec<Cert> {
+    let mut command = Command::new("gpg");
+    command.arg("--export").arg("-a");
+    let output = command.output().expect("failed to excaute command");
+    let armored_output = String::from_utf8_lossy(&output.stdout);
+    let mut certs = vec![];
+    for cert in CertParser::from_reader(armored_output.as_bytes()).expect("could not parse output") {
+        match cert {
+            Ok(cert) => certs.push(cert),
+            Err(e) => eprintln!("Skipping malformed cert: {}", e),
+        }
+    }
+    certs
+}
+
+#[cfg(target_arch = "wasm32")]
+fn get_certs(armoured: &str) -> Vec<Cert> {
+    let mut certs = vec![];
+    for cert in CertParser::from_reader(armoured.as_bytes()).expect("could not parse output") {
+        match cert {
+            Ok(cert) => certs.push(cert),
+            Err(e) => eprintln!("Skipping malformed cert: {}", e),
+        }
+    }
+    certs
+}
+
 struct MyApp {
     name: String,
     count: u32,
     ui_scale: f32,
+    certs: Vec<Cert>,
+    #[cfg(target_arch = "wasm32")]
+    gpg_armoured: String,
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
+        let certs = get_certs();
+        
+        #[cfg(target_arch = "wasm32")]
+        let certs = vec![];
+        
+        Self {
+            name: String::new(),
+            count: 0,
+            ui_scale: 1.,
+            certs,
+            #[cfg(target_arch = "wasm32")]
+            gpg_armoured: String::new(),
+        }
+    }
 }
 
 impl eframe::App for MyApp {
@@ -75,6 +127,28 @@ impl eframe::App for MyApp {
 
             if self.count > 0 {
                 ui.label(format!("Button clicked {} time(s)", self.count));
+            }
+            
+            #[cfg(target_arch = "wasm32")]
+            {
+                ui.label("GPG armoured output: ");
+                egui::ScrollArea::vertical()
+                    .max_height(200.0)
+                    .min_scrolled_height(200.0)
+                    .show(ui, |ui| {
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.gpg_armoured)
+                                .desired_width(500.)
+                                .desired_rows(1) // start small, grows up to max_height
+                        );
+                });
+                if ui.button("Enter").clicked() {
+                    self.certs = get_certs(&self.gpg_armoured);
+                }
+            }
+            
+            for i in &self.certs {
+                ui.label(format!("Fingerprint: {:?}", i.fingerprint().as_bytes()));
             }
         });
     }

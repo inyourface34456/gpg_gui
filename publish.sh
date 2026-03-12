@@ -13,7 +13,7 @@ cp dist/* /tmp/gh-pages-dist/
 
 # commit main so i doint acadently wipe miain branch
 git add .
-git commit --allow-empty -m "Deploy"
+git commit --allow-empty -m "$1"
 git push
 
 # Switch to gh-pages, wipe it, replace with new build
@@ -21,7 +21,7 @@ git checkout gh-pages
 rm -rf * target
 cp -r /tmp/gh-pages-dist/* .
 git add .
-git commit --allow-empty -m "Deploy"
+git commit --allow-empty -m "$1"
 git push origin gh-pages
 git checkout main
 rm -rf target
