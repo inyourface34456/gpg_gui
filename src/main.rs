@@ -41,36 +41,37 @@ fn main() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn get_certs() -> Vec<Cert> {
+fn get_certs() -> Result<Vec<Cert>, String> {
     let mut command = Command::new("gpg");
     command.arg("--export").arg("-a");
     let output = command.output().expect("failed to excaute command");
     let armored_output = String::from_utf8_lossy(&output.stdout);
     let mut certs = vec![];
-    for cert in CertParser::from_reader(armored_output.as_bytes()).expect("could not parse output") {
+    for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => certs.push(cert),
             Err(e) => eprintln!("Skipping malformed cert: {}", e),
         }
     }
-    certs
+    Ok(certs)
 }
 
 #[cfg(target_arch = "wasm32")]
-fn get_certs(armoured: &str) -> Vec<Cert> {
+fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
     let mut certs = vec![];
-    for cert in CertParser::from_reader(armoured.as_bytes()).expect("could not parse output") {
+    for cert in CertParser::from_reader(armoured.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => certs.push(cert),
             Err(e) => eprintln!("Skipping malformed cert: {}", e),
         }
     }
-    certs
+    Ok(certs)
 }
 
 struct MyApp {
     ui_scale: f32,
     certs: Vec<Cert>,
+    err: String,
     #[cfg(target_arch = "wasm32")]
     gpg_armoured: String,
 }
@@ -78,13 +79,24 @@ struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         #[cfg(not(target_arch = "wasm32"))]
-        let certs = get_certs();
+        let mut certs: Vec<Cert> = vec![];
+        let mut err = "".to_owned();
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Ok(cert) = get_certs() {
+                certs = cert;
+            } else {
+                eprintln!("gpg --export -a output corrupted or failed");
+                err = "gpg --export -a output corrupted or failed".to_owned();
+            }
+        }
         
         #[cfg(target_arch = "wasm32")]
         let certs = vec![];
         
         Self {
             ui_scale: 1.,
+            err,
             certs,
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
@@ -121,12 +133,19 @@ impl eframe::App for MyApp {
                         );
                 });
                 if ui.button("Enter").clicked() {
-                    self.certs = get_certs(&self.gpg_armoured);
+                    if let Ok(certs) = get_certs(&self.gpg_armoured) {
+                        self.certs = certs;
+                    } else {
+                        self.err = "corrupted gpg --export -a output".to_owned();
+                    }
                 }
             }
             
             for i in &self.certs {
                 ui.label(format!("Fingerprint: {:?}", i.fingerprint().as_bytes()));
+            }
+            if self.err != String::new() {
+                ui.label(&self.err);
             }
         });
     }
