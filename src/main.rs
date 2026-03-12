@@ -111,12 +111,12 @@ impl eframe::App for MyApp {
         
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
-               if key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl {
-                   self.ui_scale *= 1.1
-               }
-               if key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl {
-                   self.ui_scale *= 0.9
-               } 
+                if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
+                    self.ui_scale *= 1.1
+                }
+                if (key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] > 0.) {
+                    self.ui_scale *= 0.9
+                } 
             });
             
             #[cfg(target_arch = "wasm32")]
@@ -135,6 +135,7 @@ impl eframe::App for MyApp {
                 if ui.button("Enter").clicked() {
                     if let Ok(certs) = get_certs(&self.gpg_armoured) {
                         self.certs = certs;
+                        self.err = String::new();
                     } else {
                         self.err = "corrupted gpg --export -a output".to_owned();
                     }
@@ -142,7 +143,7 @@ impl eframe::App for MyApp {
             }
             
             for i in &self.certs {
-                ui.label(format!("Fingerprint: {:?}", i.fingerprint().as_bytes()));
+                ui.label(format!("Fingerprint: {}", i.userids().map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string()).collect::<Vec<String>>()[0]));
             }
             if self.err != String::new() {
                 ui.label(&self.err);
