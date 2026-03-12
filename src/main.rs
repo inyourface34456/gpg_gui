@@ -69,8 +69,6 @@ fn get_certs(armoured: &str) -> Vec<Cert> {
 }
 
 struct MyApp {
-    name: String,
-    count: u32,
     ui_scale: f32,
     certs: Vec<Cert>,
     #[cfg(target_arch = "wasm32")]
@@ -86,8 +84,6 @@ impl Default for MyApp {
         let certs = vec![];
         
         Self {
-            name: String::new(),
-            count: 0,
             ui_scale: 1.,
             certs,
             #[cfg(target_arch = "wasm32")]
@@ -110,24 +106,6 @@ impl eframe::App for MyApp {
                    self.ui_scale *= 0.9
                } 
             });
-            ui.heading("Hello, egui!");
-
-            ui.horizontal(|ui| {
-                ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name);
-            });
-
-            if ui.button("Click me!").clicked() {
-                self.count += 1;
-            }
-
-            if !self.name.is_empty() {
-                ui.label(format!("Hello, {}! 👋", self.name));
-            }
-
-            if self.count > 0 {
-                ui.label(format!("Button clicked {} time(s)", self.count));
-            }
             
             #[cfg(target_arch = "wasm32")]
             {
