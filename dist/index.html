@@ -21,7 +21,7 @@
                 height: 100% !important;
               }
         </style>
-    <link rel="modulepreload" href="/gpg_gui/gpg_gui-c4d32246c61a1a2b.js" crossorigin="anonymous" integrity="sha384-gvrlKjZ0uy7QqtB+jnR70R38bO7RHK3PMYiaO9/Z/yHRnaYfTolDp+dhd7ipT1HH"><link rel="preload" href="/gpg_gui/gpg_gui-c4d32246c61a1a2b_bg.wasm" crossorigin="anonymous" integrity="sha384-R6monvP5cXtmBn2OTNd3+6qtRqh/ymr6+1XQJ5QRVhJ2eeG5VheqWvnc5xVm/toR" as="fetch" type="application/wasm"></head>
+    <link rel="modulepreload" href="/gpg_gui/gpg_gui.js" crossorigin="anonymous" integrity="sha384-yGGW2qL3tCwq75BPQRHJ1u2qEBWkBiMiYToSmRNGvFWhF78FCiSlTFRVWckH6oMm"><link rel="preload" href="/gpg_gui/gpg_gui_bg.wasm" crossorigin="anonymous" integrity="sha384-Gz0gP6GZh070zZSjSgc9lTOMkdYwd2ckLjC4UkWkfrwFHqnnZeJhQ39293J6iRxP" as="fetch" type="application/wasm"></head>
     <body> 
         <canvas id="the_canvas_id"></canvas>
         <script>
@@ -41,8 +41,8 @@
             </script>
     
 <script type="module">
-import init, * as bindings from '/gpg_gui/gpg_gui-c4d32246c61a1a2b.js';
-const wasm = await init({ module_or_path: '/gpg_gui/gpg_gui-c4d32246c61a1a2b_bg.wasm' });
+import init, * as bindings from '/gpg_gui/gpg_gui.js';
+const wasm = await init({ module_or_path: '/gpg_gui/gpg_gui_bg.wasm' });
 
 
 window.wasmBindings = bindings;

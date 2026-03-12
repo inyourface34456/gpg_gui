@@ -35,3 +35,7 @@ sequoia-openpgp = { version = "*", default-features = false, features = [
 
 [profile.release]
 opt-level = "z"
+strip = true 
+panic = "abort"
+lto = true
+codegen-units = 1

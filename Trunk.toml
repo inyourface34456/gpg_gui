@@ -1,2 +1,36 @@
 [build]
 public_url = "/gpg_gui/"
+filehash = false
+
+[[hooks]]
+stage = "post_build"
+command = "wasm-snip"
+command_arguments = [
+    "--snip-rust-panicking-code",
+    "dist/.stage/gpg_gui_bg.wasm",
+    "-o",
+    "dist/.stage/gpg_gui_bg.wasm",
+]
+
+[[hooks]]
+stage = "post_build"
+command = "wasm-opt"
+command_arguments = [
+    "-Oz",
+    "--enable-bulk-memory",
+    "--enable-nontrapping-float-to-int",
+    "--enable-sign-ext",
+    "dist/.stage/gpg_gui_bg.wasm",
+    "-o",
+    "dist/.stage/gpg_gui_bg.wasm"
+]
+
+# this breaks the integraty hashes in the script tags, disabled for now
+# [[hooks]]
+# stage = "post_build"
+# command = "minify"
+# command_arguments = [
+#     "dist/.stage/gpg_gui.js",
+#     "-o",
+#     "dist/.stage/gpg_gui.js",
+# ]
