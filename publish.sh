@@ -24,4 +24,5 @@ git add .
 git commit --allow-empty -m "Deploy"
 git push origin gh-pages
 git checkout main
+rm -rf target
 mv /tmp/target-cache/target .
