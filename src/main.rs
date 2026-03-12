@@ -41,6 +41,7 @@ fn main() {
 struct MyApp {
     name: String,
     count: u32,
+    ui_scale: f32,
 }
 
 impl eframe::App for MyApp {
@@ -49,6 +50,14 @@ impl eframe::App for MyApp {
         ctx.set_pixels_per_point(pixels_per_point);
         
         egui::CentralPanel::default().show(ctx, |ui| {
+            ui.input(|key| {
+               if key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl {
+                   self.ui_scale *= 1.1
+               }
+               if key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl {
+                   self.ui_scale *= 0.9
+               } 
+            });
             ui.heading("Hello, egui!");
 
             ui.horizontal(|ui| {

@@ -19,7 +19,4 @@ web-sys = "0.3"
 wasm-bindgen = "=0.2.100"
 
 [profile.release]
-opt-level = "z"  # if you're using size optimization, use "s" instead
-
-[build]
-rustflags = ["-C", "target-cpu=native"]
+opt-level = "z"
