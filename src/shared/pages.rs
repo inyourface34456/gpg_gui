@@ -6,6 +6,6 @@ pub enum Pages {
 
 impl Default for Pages {
     fn default() -> Self {
-        Self::NewCert
+        Self::Certs
     }
 }

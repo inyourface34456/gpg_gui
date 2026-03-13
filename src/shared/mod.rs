@@ -1,10 +1,14 @@
 mod pages;
 mod page_code;
+pub mod checkbox;
+mod new_cert_status;
 
 use eframe::egui;
 use sequoia_openpgp::Cert;
 use pages::Pages;
 use page_code::*;
+use checkbox::CheckboxDropdown;
+use new_cert_status::CertStatus;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::get_certs;
@@ -16,6 +20,7 @@ pub struct MyApp {
     pub certs: Vec<Cert>,
     pub err: String,
     pub page: Pages,
+    pub cert_status: CertStatus,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
 }
@@ -43,6 +48,7 @@ impl Default for MyApp {
             ui_scale: 1.,
             err,
             certs,
+            cert_status: CertStatus::default(),
             page: Pages::default(),
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
