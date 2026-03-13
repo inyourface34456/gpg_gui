@@ -2,6 +2,9 @@
 public_url = "/gpg_gui/"
 filehash = false
 
+[serve]
+no_autoreload = false
+
 [[hooks]]
 stage = "post_build"
 command = "wasm-snip"
