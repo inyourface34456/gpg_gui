@@ -1,5 +1,10 @@
+mod pages;
+mod page_code;
+
 use eframe::egui;
 use sequoia_openpgp::Cert;
+use pages::Pages;
+use page_code::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::get_certs;
@@ -10,6 +15,7 @@ pub struct MyApp {
     pub ui_scale: f32,
     pub certs: Vec<Cert>,
     pub err: String,
+    pub page: Pages,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
 }
@@ -37,6 +43,7 @@ impl Default for MyApp {
             ui_scale: 1.,
             err,
             certs,
+            page: Pages::default(),
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
         }
@@ -45,9 +52,6 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let pixels_per_point = ctx.pixels_per_point();
-        ctx.set_pixels_per_point(pixels_per_point);
-        
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
                 if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
@@ -58,14 +62,18 @@ impl eframe::App for MyApp {
                 } 
             });
             
-            #[cfg(target_arch = "wasm32")]
-            get_and_display_certs(self, ui);
+            egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.selectable_value(&mut self.page, Pages::Certs, "Certs");
+                    ui.selectable_value(&mut self.page, Pages::NewCert, "New Cert");
+                    // ui.selectable_value(&mut self.page, Pages::About, "About");
+                });
+            });
             
-            for i in &self.certs {
-                ui.label(format!("User Ids: {}", i.userids().map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string()).collect::<Vec<String>>()[0]));
-            }
-            if self.err != String::new() {
-                ui.label(&self.err);
+            ui.add_space(20.);
+            match self.page {
+                Pages::Certs => see_certs(self, ui),
+                Pages::NewCert => new_cert(self, ui),
             }
         });
     }
