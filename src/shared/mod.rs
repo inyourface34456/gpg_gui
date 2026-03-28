@@ -22,7 +22,7 @@ pub struct MyApp {
     pub err: String,
     pub page: Pages,
     pub cert_status: CertStatus,
-    pub bg_color: [u8; 4],
+    pub visuals: eframe::egui::style::Visuals,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
 }
@@ -52,7 +52,7 @@ impl Default for MyApp {
             certs,
             cert_status: CertStatus::default(),
             page: Pages::default(),
-            bg_color: [35, 35, 35, 255],
+            visuals: eframe::egui::style::Visuals::dark(),
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
         }
@@ -61,9 +61,7 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let mut visuals = egui::Visuals::dark();
-        visuals.panel_fill = Color32::from_rgba_unmultiplied(self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3]);
-        ctx.set_visuals(visuals);
+        ctx.set_visuals(self.visuals.clone());
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
                 if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
