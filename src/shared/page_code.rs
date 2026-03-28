@@ -88,6 +88,8 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
     // let style = ui.style_mut();
     ui.horizontal(|ui| {
         ui.label("Background color: ");
-        ui.color_edit_button_srgba_unmultiplied(&mut self_.bg_color);
+        let mut temp = self_.visuals.panel_fill.to_srgba_unmultiplied();
+        ui.color_edit_button_srgba_unmultiplied(&mut temp);
+        self_.visuals.panel_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3])
     });
 }
