@@ -1,7 +1,8 @@
 #[derive(PartialEq, Eq)]
 pub enum Pages {
     Certs,
-    NewCert
+    NewCert,
+    Style
 }
 
 impl Default for Pages {

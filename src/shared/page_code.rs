@@ -1,3 +1,4 @@
+use egui::Color32;
 use egui::Ui;
 use sequoia_openpgp::types::KeyFlags;
 use crate::MyApp;
@@ -81,4 +82,12 @@ pub fn new_cert(self_: &mut MyApp, ui: &mut Ui) {
     }
     
     ui.label(user_id);
+}
+
+pub fn style(self_: &mut MyApp, ui: &mut Ui) {
+    // let style = ui.style_mut();
+    ui.horizontal(|ui| {
+        ui.label("Background color: ");
+        ui.color_edit_button_srgba_unmultiplied(&mut self_.bg_color);
+    });
 }
