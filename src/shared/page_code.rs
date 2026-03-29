@@ -102,10 +102,10 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
 
         ui.horizontal(|ui| {
             let label = ui.label("Window Fill: ");
-            label.on_hover_text("Background color of the main window");
-            let mut temp = self_.style.visuals.panel_fill.to_srgba_unmultiplied();
+            label.on_hover_text("Background color for the for pannels (like the color selector)");
+            let mut temp = self_.style.visuals.window_fill.to_srgba_unmultiplied();
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-            self_.style.visuals.panel_fill =
+            self_.style.visuals.window_fill =
                 Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
 
@@ -359,7 +359,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
         
         ui.horizontal(|ui| {
             let label = ui.label("Pannel fill: ");
-            label.on_hover_text("Background color for the for pannels (like the color selector)");
+            label.on_hover_text("Background color for the main window");
             let mut temp = self_.style.visuals.panel_fill.to_srgba_unmultiplied();
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.panel_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
