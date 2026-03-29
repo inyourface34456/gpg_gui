@@ -4,7 +4,6 @@ pub mod checkbox;
 mod new_cert_status;
 
 use eframe::egui;
-use egui::Color32;
 use sequoia_openpgp::Cert;
 use pages::Pages;
 use page_code::*;
@@ -22,7 +21,7 @@ pub struct MyApp {
     pub err: String,
     pub page: Pages,
     pub cert_status: CertStatus,
-    pub visuals: eframe::egui::style::Visuals,
+    pub style: eframe::egui::style::Style,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
 }
@@ -52,7 +51,7 @@ impl Default for MyApp {
             certs,
             cert_status: CertStatus::default(),
             page: Pages::default(),
-            visuals: eframe::egui::style::Visuals::dark(),
+            style: eframe::egui::style::Style::default(),
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
         }
@@ -61,7 +60,7 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.set_visuals(self.visuals.clone());
+        ctx.set_style(self.style.clone());
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
                 if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
