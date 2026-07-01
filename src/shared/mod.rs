@@ -5,7 +5,7 @@ mod pages;
 
 use checkbox::CheckboxDropdown;
 use eframe::egui;
-use egui::{Context, accesskit::AriaCurrent::Page};
+use egui::Context;
 use new_cert_status::CertStatus;
 use pages::Pages;
 use sequoia_openpgp::Cert;
@@ -40,7 +40,7 @@ impl Default for MyApp {
                 certs = cert;
             } else {
                 eprintln!("gpg --export -a output corrupted or failed");
-                err = "gpg --export -a output corrupted or failed".to_owned();
+                err = String::from("gpg --export -a output corrupted or failed");
             }
         }
 
@@ -67,13 +67,14 @@ impl eframe::App for MyApp {
         ctx.set_style(self.style.clone());
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
-                if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
+                if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] > 0.) {
                     self.ui_scale *= 1.1
                 }
-                if (key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] > 0.) {
+                if (key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
                     self.ui_scale *= 0.9
                 }
             });
+            ctx.set_zoom_factor(self.ui_scale);
 
             egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -97,6 +98,8 @@ impl eframe::App for MyApp {
                     });
                 }
             }
+
+            self.display_error(ctx);
 
             ui.add_space(20.);
             match self.page {
