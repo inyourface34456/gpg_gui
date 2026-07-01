@@ -27,13 +27,3 @@ command_arguments = [
     "-o",
     "dist/.stage/gpg_gui_bg.wasm"
 ]
-
-# this breaks the integraty hashes in the script tags, disabled for now
-# [[hooks]]
-# stage = "post_build"
-# command = "minify"
-# command_arguments = [
-#     "dist/.stage/gpg_gui.js",
-#     "-o",
-#     "dist/.stage/gpg_gui.js",
-# ]

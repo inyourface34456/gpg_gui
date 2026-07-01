@@ -11,16 +11,16 @@ pub struct CertStatus {
 
 impl Default for CertStatus {
     fn default() -> Self {
-        let key_flags = CheckboxDropdown::new(
-            "Key Flags",
-            vec![
-                "Authentication",
-                "Certification",
-                "Sigining",
-                "Transport Encryption",
-                "Storage Encryption",
-            ],
-        );
+        // let key_flags = CheckboxDropdown::new(
+        //     "Key Flags",
+        //     vec![
+        //         "Authentication",
+        //         "Certification",
+        //         "Sigining",
+        //         "Transport Encryption",
+        //         "Storage Encryption",
+        //     ],
+        // );
 
         Self {
             // key_flags,

@@ -27,7 +27,7 @@ wasm-bindgen-futures = "0.4"
 web-sys = "0.3"
 wasm-bindgen = "=0.2.100"
 getrandom = {version = "0.3.4", features=["wasm_js"]}
-sequoia-openpgp = { version = "*", default-features = false, features = [
+sequoia-openpgp = { version = "2.2.0", default-features = false, features = [
   "crypto-rust",
   "allow-experimental-crypto",
   "allow-variable-time-crypto"
@@ -39,3 +39,8 @@ strip = true
 panic = "abort"
 lto = true
 codegen-units = 1
+
+[dependencies]
+console_error_panic_hook = "0.1.7"
+env_logger = "0.11.11"
+log = "0.4.33"

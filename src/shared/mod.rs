@@ -3,17 +3,13 @@ mod new_cert_status;
 mod page_code;
 mod pages;
 
+use crate::platform::get_certs;
 use checkbox::CheckboxDropdown;
 use eframe::egui;
 use egui::Context;
 use new_cert_status::CertStatus;
 use pages::Pages;
 use sequoia_openpgp::Cert;
-
-// #[cfg(target_arch = "wasm32")]
-// use crate::get_and_display_certs;
-#[cfg(not(target_arch = "wasm32"))]
-use crate::get_certs;
 
 pub struct MyApp {
     pub ui_scale: f32,
@@ -39,7 +35,7 @@ impl Default for MyApp {
             if let Ok(cert) = get_certs() {
                 certs = cert;
             } else {
-                eprintln!("gpg --export -a output corrupted or failed");
+                log::error!("gpg --export -a output corrupted or failed");
                 err = String::from("gpg --export -a output corrupted or failed");
             }
         }

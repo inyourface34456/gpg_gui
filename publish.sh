@@ -2,7 +2,7 @@ set -o errexit
 
 find . -name '*.rs' -exec sed -i 's/[ \t]*$//' {} +
 cargo fmt
-trunk build --release
+trunk build --release --minify
 
 CACHE_DIR="../.build-cache"
 mkdir -p "$CACHE_DIR"

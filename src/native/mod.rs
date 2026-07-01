@@ -12,8 +12,12 @@ pub fn get_certs() -> Result<Vec<Cert>, String> {
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => certs.push(cert),
-            Err(e) => eprintln!("Skipping malformed cert: {}", e),
+            Err(e) => log::error!("Skipping malformed cert: {}", e),
         }
     }
     Ok(certs)
+}
+
+pub fn init_logging() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
 }
