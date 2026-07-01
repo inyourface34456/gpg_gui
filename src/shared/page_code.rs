@@ -23,12 +23,17 @@ impl MyApp {
         for i in &self.certs {
             ui.label(format!(
                 "User Id: {}",
-                i.userids()
+                match i
+                    .userids()
                     .map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string())
-                    .collect::<Vec<String>>()[0]
+                    .next()
+                {
+                    Some(e) => e.to_string(),
+                    None => String::from("No names in export"),
+                }
             ));
         }
-        if self.err != String::new() {
+        if !self.err.is_empty() {
             ui.label(&self.err);
         }
     }
