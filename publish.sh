@@ -1,5 +1,7 @@
 set -o errexit
 
+find . -name '*.rs' -exec sed -i 's/[ \t]*$//' {} +
+cargo fmt
 trunk build --release
 
 # Copy dist contents to a temp location

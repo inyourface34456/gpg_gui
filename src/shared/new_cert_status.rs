@@ -2,7 +2,7 @@ use crate::shared::CheckboxDropdown;
 use sequoia_openpgp::cert::CipherSuite;
 
 pub struct CertStatus {
-    pub key_flags: CheckboxDropdown,
+    // pub key_flags: CheckboxDropdown,
     pub crypto_algo: CipherSuite,
     pub display_name: String,
     pub comment: String,
@@ -23,7 +23,7 @@ impl Default for CertStatus {
         );
 
         Self {
-            key_flags,
+            // key_flags,
             crypto_algo: CipherSuite::Cv25519,
             display_name: String::new(),
             comment: String::new(),

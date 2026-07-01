@@ -7,8 +7,8 @@ mod wasm;
 #[cfg(not(target_arch = "wasm32"))]
 use native::get_certs;
 use shared::MyApp;
-#[cfg(target_arch = "wasm32")]
-use wasm::get_and_display_certs;
+// #[cfg(target_arch = "wasm32")]
+// use wasm::get_and_display_certs;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
