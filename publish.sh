@@ -7,7 +7,9 @@ trunk build --release --minify
 CACHE_DIR="../.build-cache"
 mkdir -p "$CACHE_DIR"
 rm -rf "$CACHE_DIR/target"
+rm -rf "$CACHE_DIR/.zed"
 mv target "$CACHE_DIR/"
+mv .zed "$CACHE_DIR/"
 
 rm -rf /tmp/gh-pages-dist
 mkdir /tmp/gh-pages-dist
@@ -26,5 +28,6 @@ git push origin gh-pages
 
 git checkout main
 mv "$CACHE_DIR/target" .
+mv "$CACHE_DIR/.zed" .
 
 rm -rf /tmp/gh-pages-dist
