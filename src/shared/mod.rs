@@ -1,10 +1,8 @@
-pub mod checkbox;
 mod new_cert_status;
 mod page_code;
 mod pages;
 
 use crate::platform::get_certs;
-use checkbox::CheckboxDropdown;
 use eframe::egui;
 use egui::Context;
 use new_cert_status::CertStatus;
