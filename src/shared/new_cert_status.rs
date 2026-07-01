@@ -7,6 +7,13 @@ pub struct CertStatus {
     pub display_name: String,
     pub comment: String,
     pub email: String,
+    pub expire_date: u64,
+    pub never_expires: bool,
+    pub password: String,
+    pub show_window: bool,
+    pub cert_text: String,
+    pub secret_text: String,
+    pub rev_text: String,
 }
 
 impl Default for CertStatus {
@@ -28,6 +35,13 @@ impl Default for CertStatus {
             display_name: String::new(),
             comment: String::new(),
             email: String::new(),
+            expire_date: 0,
+            never_expires: false,
+            password: String::new(),
+            show_window: false,
+            cert_text: String::new(),
+            rev_text: String::new(),
+            secret_text: String::new(),
         }
     }
 }
