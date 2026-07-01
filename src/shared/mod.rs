@@ -5,13 +5,13 @@ mod pages;
 
 use checkbox::CheckboxDropdown;
 use eframe::egui;
+use egui::{Context, accesskit::AriaCurrent::Page};
 use new_cert_status::CertStatus;
-use page_code::*;
 use pages::Pages;
 use sequoia_openpgp::Cert;
 
-#[cfg(target_arch = "wasm32")]
-use crate::get_and_display_certs;
+// #[cfg(target_arch = "wasm32")]
+// use crate::get_and_display_certs;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::get_certs;
 
@@ -80,6 +80,7 @@ impl eframe::App for MyApp {
                     ui.selectable_value(&mut self.page, Pages::Certs, "Certs");
                     ui.selectable_value(&mut self.page, Pages::NewCert, "New Cert");
                     ui.selectable_value(&mut self.page, Pages::Style, "Style");
+                    ui.selectable_value(&mut self.page, Pages::Debug, "Debug");
                     // ui.selectable_value(&mut self.page, Pages::About, "About");
                 });
             });
@@ -114,7 +115,26 @@ impl eframe::App for MyApp {
                         self.style(ui);
                     });
                 },
+                Pages::Debug => {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        self.debug(ui);
+                    });
+                }
             }
         });
+    }
+}
+
+impl MyApp {
+    pub fn display_error(&mut self, ctx: &Context) {
+        let err_window = egui::containers::Window::new("Error");
+        if !self.err.is_empty() {
+            err_window.show(ctx, |ui| {
+                ui.label(format!("Error: {}", self.err));
+                if ui.button("Dismiss").clicked() {
+                    self.err = String::new();
+                }
+            });
+        }
     }
 }
