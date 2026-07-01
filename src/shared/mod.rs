@@ -1,19 +1,19 @@
-mod pages;
-mod page_code;
 pub mod checkbox;
 mod new_cert_status;
+mod page_code;
+mod pages;
 
-use eframe::egui;
-use sequoia_openpgp::Cert;
-use pages::Pages;
-use page_code::*;
 use checkbox::CheckboxDropdown;
+use eframe::egui;
 use new_cert_status::CertStatus;
+use page_code::*;
+use pages::Pages;
+use sequoia_openpgp::Cert;
 
-#[cfg(not(target_arch = "wasm32"))]
-use crate::get_certs;
 #[cfg(target_arch = "wasm32")]
 use crate::get_and_display_certs;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::get_certs;
 
 pub struct MyApp {
     pub ui_scale: f32,
@@ -21,6 +21,7 @@ pub struct MyApp {
     pub err: String,
     pub page: Pages,
     pub cert_status: CertStatus,
+    pub show_warning: bool,
     pub style: eframe::egui::style::Style,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
@@ -41,10 +42,10 @@ impl Default for MyApp {
                 err = "gpg --export -a output corrupted or failed".to_owned();
             }
         }
-        
+
         #[cfg(target_arch = "wasm32")]
         let certs = vec![];
-        
+
         Self {
             ui_scale: 1.,
             err,
@@ -52,6 +53,7 @@ impl Default for MyApp {
             cert_status: CertStatus::default(),
             page: Pages::default(),
             style: eframe::egui::style::Style::default(),
+            show_warning: true,
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
         }
@@ -68,9 +70,9 @@ impl eframe::App for MyApp {
                 }
                 if (key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] > 0.) {
                     self.ui_scale *= 0.9
-                } 
+                }
             });
-            
+
             egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut self.page, Pages::Certs, "Certs");
@@ -79,12 +81,37 @@ impl eframe::App for MyApp {
                     // ui.selectable_value(&mut self.page, Pages::About, "About");
                 });
             });
-            
+
+            #[cfg(target_arch = "wasm32")]
+            {
+                let warning_window = egui::containers::Window::new("WARNING!!!");
+                if self.show_warning {
+                    warning_window.show(ctx, |ui| {
+                        ui.label("This is the web version, and as such, is not 100% garenteed to be totally secure, due to the fact that the crypto libaries I am using do not suport wasm  fully, and as such, I recommend that you download or compile the native version. As of right now, the only feature I was forced to disable is the constant time crypto.");
+                        if ui.button("Dismiss").clicked() {
+                            self.show_warning = false;
+                        }
+                    });
+                }
+            }
+
             ui.add_space(20.);
             match self.page {
-                Pages::Certs => see_certs(self, ui),
-                Pages::NewCert => new_cert(self, ui),
-                Pages::Style => style(self, ui),
+                Pages::Certs => {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        see_certs(self, ui);
+                    });
+                }
+                Pages::NewCert => {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        new_cert(self, ui);
+                    });
+                },
+                Pages::Style => {
+                    egui::ScrollArea::vertical().auto_shrink(egui::Vec2b::new(false, false)).show(ui, |ui| {
+                        style(self, ui);
+                    });
+                },
             }
         });
     }

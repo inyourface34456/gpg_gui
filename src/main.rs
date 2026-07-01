@@ -1,12 +1,12 @@
-mod shared;
 #[cfg(not(target_arch = "wasm32"))]
 mod native;
+mod shared;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
-use shared::MyApp;
 #[cfg(not(target_arch = "wasm32"))]
 use native::get_certs;
+use shared::MyApp;
 #[cfg(target_arch = "wasm32")]
 use wasm::get_and_display_certs;
 
@@ -39,7 +39,11 @@ fn main() {
             .expect("the_canvas_id was not a HtmlCanvasElement");
 
         eframe::WebRunner::new()
-            .start(canvas, web_options, Box::new(|_cc| Ok(Box::new(MyApp::default()))))
+            .start(
+                canvas,
+                web_options,
+                Box::new(|_cc| Ok(Box::new(MyApp::default()))),
+            )
             .await
             .expect("failed to start eframe");
     });

@@ -14,8 +14,10 @@ pub fn see_certs(self_: &mut MyApp, ui: &mut Ui) {
 
     for i in &self_.certs {
         ui.label(format!(
-            "User Ids: {}",
-            i.userids().map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string()).collect::<Vec<String>>()[0]
+            "User Id: {}",
+            i.userids()
+                .map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string())
+                .collect::<Vec<String>>()[0]
         ));
     }
     if self_.err != String::new() {
@@ -26,40 +28,72 @@ pub fn see_certs(self_: &mut MyApp, ui: &mut Ui) {
 pub fn new_cert(self_: &mut MyApp, ui: &mut Ui) {
     ui.heading("New Certifacate");
     ui.separator();
-    ui.horizontal(|ui| {
-        ui.label("Key Flags");
-        self_.cert_status.key_flags.show(ui);
-    });
+    // ui.horizontal(|ui| {
+    //     ui.label("Key Flags");
+    //     self_.cert_status.key_flags.show(ui);
+    // });
     ui.add_space(7.);
 
-    let key_flags = KeyFlags::new([0]);
-    // ["Authentication", "Certification", "Sigining", "Transport Encryption", "Storage Encryption"]
-    let enabled_flags = self_.cert_status.key_flags.selected_by_pos();
-    key_flags
-        .set_authentication_to(enabled_flags[0])
-        .set_certification_to(enabled_flags[1])
-        .set_signing_to(enabled_flags[2])
-        .set_transport_encryption_to(enabled_flags[3])
-        .set_storage_encryption_to(enabled_flags[4]);
+    // let key_flags = KeyFlags::new([0]);
+    // // ["Authentication", "Certification", "Sigining", "Transport Encryption", "Storage Encryption"]
+    // let enabled_flags = self_.cert_status.key_flags.selected_by_pos();
+    // key_flags
+    //     .set_authentication_to(enabled_flags[0])
+    //     .set_certification_to(enabled_flags[1])
+    //     .set_signing_to(enabled_flags[2])
+    //     .set_transport_encryption_to(enabled_flags[3])
+    //     .set_storage_encryption_to(enabled_flags[4]);
 
     ui.horizontal(|ui| {
         ui.label("Primary Crypto Algorithm");
         egui::ComboBox::from_label(" ")
             .selected_text(format!("{:?}", self_.cert_status.crypto_algo))
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::Cv25519, "Cv25519");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::Cv448, "Cv448");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::P256, "NistP256");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::P384, "NistP384");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::P521, "NistP521");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::RSA2k, "RSA2k");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::RSA3k, "RSA3k");
-                ui.selectable_value(&mut self_.cert_status.crypto_algo, CipherSuite::RSA4k, "RSA4k");
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::Cv25519,
+                    "Cv25519",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::Cv448,
+                    "Cv448",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::P256,
+                    "NistP256",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::P384,
+                    "NistP384",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::P521,
+                    "NistP521",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::RSA2k,
+                    "RSA2k",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::RSA3k,
+                    "RSA3k",
+                );
+                ui.selectable_value(
+                    &mut self_.cert_status.crypto_algo,
+                    CipherSuite::RSA4k,
+                    "RSA4k",
+                );
             });
     });
 
     ui.horizontal(|ui| {
-        ui.label("Display Name: ");
+        ui.label("Display Name*: ");
         ui.text_edit_singleline(&mut self_.cert_status.display_name);
     });
 
@@ -74,14 +108,27 @@ pub fn new_cert(self_: &mut MyApp, ui: &mut Ui) {
     });
 
     let user_id;
-    if self_.cert_status.comment.is_empty() && !self_.cert_status.email.is_empty() {
-        user_id = format!("{} <{}>", self_.cert_status.display_name, self_.cert_status.email);
-    } else if !self_.cert_status.comment.is_empty() && self_.cert_status.email.is_empty() {
-        user_id = format!("{} ({})", self_.cert_status.display_name, self_.cert_status.comment);
-    } else if !self_.cert_status.comment.is_empty() && !self_.cert_status.email.is_empty() {
-        user_id = format!("{} ({}) <{}>", self_.cert_status.display_name, self_.cert_status.comment, self_.cert_status.email);
+    if !self_.cert_status.display_name.is_empty() {
+        if self_.cert_status.comment.is_empty() && !self_.cert_status.email.is_empty() {
+            user_id = format!(
+                "{} <{}>",
+                self_.cert_status.display_name, self_.cert_status.email
+            );
+        } else if !self_.cert_status.comment.is_empty() && self_.cert_status.email.is_empty() {
+            user_id = format!(
+                "{} ({})",
+                self_.cert_status.display_name, self_.cert_status.comment
+            );
+        } else if !self_.cert_status.comment.is_empty() && !self_.cert_status.email.is_empty() {
+            user_id = format!(
+                "{} ({}) <{}>",
+                self_.cert_status.display_name, self_.cert_status.comment, self_.cert_status.email
+            );
+        } else {
+            user_id = self_.cert_status.display_name.clone();
+        }
     } else {
-        user_id = self_.cert_status.display_name.clone();
+        user_id = String::new()
     }
 
     ui.label(user_id);
@@ -146,7 +193,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 });
             });
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Hyperlink Color: ");
             // label.on_hover_text("Color of any links");
@@ -160,7 +207,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.hyperlink_color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Faint BG color: ");
             label.on_hover_text("Background color for the light verion of the background, possibly only used in grids");
@@ -168,7 +215,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.faint_bg_color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Extreme BG color: ");
             label.on_hover_text("Background color for differentiating dark and light parts of the ui (bg of scroll bars, etc)");
@@ -176,7 +223,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.extreme_bg_color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Code BG color: ");
             label.on_hover_text("Background color for code blocks");
@@ -184,7 +231,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.code_bg_color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Warning color: ");
             label.on_hover_text("Color for warnings");
@@ -192,7 +239,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.warn_fg_color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Error color: ");
             label.on_hover_text("Color for errors");
@@ -200,7 +247,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.error_fg_color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.collapsing("Window Corner Radius", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("NW corner rounding: ");
@@ -209,7 +256,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_corner_radius.nw = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("NE corner rounding: ");
                 label.on_hover_text("radius of the northeast corner");
@@ -217,7 +264,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_corner_radius.ne = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("SW corner rounding: ");
                 label.on_hover_text("radius of the southwest corner");
@@ -225,7 +272,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_corner_radius.sw = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("SE corner rounding: ");
                 label.on_hover_text("radius of the southeast corner");
@@ -233,14 +280,14 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_corner_radius.se = temp;
             });
-            
+
             if ui.button("Set all to NW corner").clicked() {
                 self_.style.visuals.window_corner_radius.ne = self_.style.visuals.window_corner_radius.nw;
                 self_.style.visuals.window_corner_radius.sw = self_.style.visuals.window_corner_radius.nw;
                 self_.style.visuals.window_corner_radius.se = self_.style.visuals.window_corner_radius.nw;
             }
         });
-        
+
         let shadow_response = ui.collapsing("Window Shadow", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("Shadow Drop (Right): ");
@@ -248,17 +295,17 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 let mut temp = self_.style.visuals.window_shadow.offset[0];
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_shadow.offset[0] = temp;
-                
+
                 ui.label("Left drop: ");
                 let mut temp = self_.style.visuals.window_shadow.offset[1];
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_shadow.offset[1] = temp;
-                
+
                 if ui.button("Set equal (set left to right)").clicked() {
                     self_.style.visuals.window_shadow.offset[1] = self_.style.visuals.window_shadow.offset[0];
                 }
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Blur radius: ");
                 label.on_hover_text("radius of the blur");
@@ -266,7 +313,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_shadow.blur = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Spread: ");
                 label.on_hover_text("Spread of the shadow");
@@ -274,7 +321,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.window_shadow.spread = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Shadow color: ");
                 label.on_hover_text("Color the shadow");
@@ -283,14 +330,14 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 self_.style.visuals.window_shadow.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
             });
         });
-        
+
         match shadow_response.body_response {
             Some(body) => {
                 body.on_hover_text_at_pointer("Docs say that this is very similer to CSS drop shadow");
             },
             None => {}
         };
-        
+
         ui.collapsing("Window Stroke", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("Stroke color: ");
@@ -300,6 +347,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 self_.style.visuals.window_stroke.color =
                     Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
             });
+
             ui.horizontal(|ui| {
                 let label = ui.label("Stroke width: ");
                 label.on_hover_text("width of the outline on the window");
@@ -308,7 +356,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 self_.style.visuals.window_stroke.width = temp;
             });
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Highlight topmost window: ");
             label.on_hover_text("If enabled, highlights the topmost window");
@@ -316,7 +364,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.window_highlight_topmost = temp;
         });
-        
+
         ui.collapsing("Menu Corner Radius", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("NW corner rounding: ");
@@ -325,7 +373,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.menu_corner_radius.nw = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("NE corner rounding: ");
                 label.on_hover_text("radius of the northeast corner");
@@ -333,7 +381,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.menu_corner_radius.ne = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("SW corner rounding: ");
                 label.on_hover_text("radius of the southwest corner");
@@ -341,7 +389,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.menu_corner_radius.sw = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("SE corner rounding: ");
                 label.on_hover_text("radius of the southeast corner");
@@ -349,14 +397,14 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.menu_corner_radius.se = temp;
             });
-            
+
             if ui.button("Set all to NW corner").clicked() {
                 self_.style.visuals.menu_corner_radius.ne = self_.style.visuals.menu_corner_radius.nw;
                 self_.style.visuals.menu_corner_radius.sw = self_.style.visuals.menu_corner_radius.nw;
                 self_.style.visuals.menu_corner_radius.se = self_.style.visuals.menu_corner_radius.nw;
             }
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Pannel fill: ");
             label.on_hover_text("Background color for the main window");
@@ -364,7 +412,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.color_edit_button_srgba_unmultiplied(&mut temp);
             self_.style.visuals.panel_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
         });
-        
+
         ui.collapsing("Popup Shadow", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("Shadow Drop (Right): ");
@@ -372,17 +420,17 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 let mut temp = self_.style.visuals.popup_shadow.offset[0];
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.popup_shadow.offset[0] = temp;
-                
+
                 ui.label("Left drop: ");
                 let mut temp = self_.style.visuals.popup_shadow.offset[1];
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.popup_shadow.offset[1] = temp;
-                
+
                 if ui.button("Set equal (set left to right)").clicked() {
                     self_.style.visuals.popup_shadow.offset[1] = self_.style.visuals.popup_shadow.offset[0];
                 }
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Blur radius: ");
                 label.on_hover_text("radius of the blur");
@@ -390,7 +438,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.popup_shadow.blur = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Spread: ");
                 label.on_hover_text("Spread of the shadow");
@@ -398,7 +446,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
                 self_.style.visuals.popup_shadow.spread = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Shadow color: ");
                 label.on_hover_text("Color the shadow");
@@ -407,7 +455,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 self_.style.visuals.popup_shadow.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
             });
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Corner size: ");
             label.on_hover_text("no idea what this does, the feild is named resize_corner_size");
@@ -415,7 +463,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
             self_.style.visuals.resize_corner_size = temp;
         });
-        
+
         ui.collapsing("Text Cursor Style", |ui| {
             ui.collapsing("Stroke", |ui| {
                 ui.horizontal(|ui| {
@@ -426,6 +474,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                     self_.style.visuals.text_cursor.stroke.color =
                         Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                 });
+
                 ui.horizontal(|ui| {
                     let label = ui.label("Stroke width: ");
                     label.on_hover_text("width of the outline on the text cursor");
@@ -434,7 +483,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                     self_.style.visuals.text_cursor.stroke.width = temp;
                 });
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Preview: ");
                 label.on_hover_text("Shows where the text cursor would be if you clicked");
@@ -442,7 +491,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.checkbox(&mut temp, "");
                 self_.style.visuals.text_cursor.preview = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Blink: ");
                 label.on_hover_text("Should the cursor blink");
@@ -450,7 +499,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.checkbox(&mut temp, "");
                 self_.style.visuals.text_cursor.blink = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("On duration: ");
                 label.on_hover_text("amount of time the cursor stays on during the blink cycle");
@@ -458,7 +507,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
                 self_.style.visuals.text_cursor.on_duration = temp;
             });
-            
+
             ui.horizontal(|ui| {
                 let label = ui.label("Off duration: ");
                 label.on_hover_text("amount of time the cursor stays off during the blink cycle");
@@ -467,7 +516,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
                 self_.style.visuals.text_cursor.off_duration = temp;
             });
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Clip Rect Margin: ");
             label.on_hover_text("Also dont really understand this one (Allow child widgets to be just on the border and still have a stroke with some thickness according to docs)");
@@ -475,7 +524,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
             self_.style.visuals.clip_rect_margin = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Button Fame: ");
             label.on_hover_text("Waether or not to show a background on buttons");
@@ -483,7 +532,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.button_frame = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Collapsing Header Frame: ");
             label.on_hover_text("Show a background behind collapsing headers");
@@ -491,7 +540,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.collapsing_header_frame = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Indent has Left Vertical Line: ");
             label.on_hover_text("Draw a vertical lien left of indented region");
@@ -499,7 +548,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.indent_has_left_vline = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Striped: ");
             label.on_hover_text("Weather or not to stripe grids and tables");
@@ -507,7 +556,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.striped = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Slider trailing fill: ");
             label.on_hover_text("Show trailing color behind the circle of a Slider");
@@ -515,7 +564,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.slider_trailing_fill = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("Show image loading spinner: ");
             label.on_hover_text("Show a spinner when loading an image");
@@ -523,7 +572,7 @@ pub fn style(self_: &mut MyApp, ui: &mut Ui) {
             ui.checkbox(&mut temp, "");
             self_.style.visuals.image_loading_spinners = temp;
         });
-        
+
         ui.horizontal(|ui| {
             let label = ui.label("How to display Colors: ");
             label.on_hover_text("How to display numeric color values (gamma byte is 0-255, linear is 0-1)");

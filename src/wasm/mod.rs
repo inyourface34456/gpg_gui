@@ -1,8 +1,8 @@
-use sequoia_openpgp::cert::CertParser;
-use sequoia_openpgp::parse::Parse;
 use crate::MyApp;
 use eframe::egui::Ui;
 use sequoia_openpgp::Cert;
+use sequoia_openpgp::cert::CertParser;
+use sequoia_openpgp::parse::Parse;
 
 fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
     let mut certs = vec![];
@@ -24,9 +24,10 @@ pub fn get_and_display_certs(self_: &mut MyApp, ui: &mut Ui) {
             ui.add(
                 egui::TextEdit::multiline(&mut self_.gpg_armoured)
                     .desired_width(500.)
-                    .desired_rows(1) // start small, grows up to max_height
+                    .desired_rows(1), // start small, grows up to max_height
             );
-    });
+        });
+
     if ui.button("Enter").clicked() {
         if let Ok(certs) = get_certs(&self_.gpg_armoured) {
             self_.certs = certs;
