@@ -2,7 +2,7 @@
 pub enum Pages {
     Certs,
     NewCert,
-    Style
+    Style,
 }
 
 impl Default for Pages {

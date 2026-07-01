@@ -50,15 +50,14 @@ impl CheckboxDropdown {
     }
 
     pub fn selected(&self) -> Vec<&str> {
-        self.options.iter()
+        self.options
+            .iter()
             .filter(|(_, c)| *c)
             .map(|(l, _)| l.as_str())
             .collect()
     }
-    
+
     pub fn selected_by_pos(&self) -> Vec<bool> {
-        self.options.iter()
-            .map(|(_, l)| *l)
-            .collect()
+        self.options.iter().map(|(_, l)| *l).collect()
     }
 }

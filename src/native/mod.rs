@@ -1,7 +1,7 @@
+use sequoia_openpgp::Cert;
 use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::Parse;
 use std::process::Command;
-use sequoia_openpgp::Cert;
 
 pub fn get_certs() -> Result<Vec<Cert>, String> {
     let mut command = Command::new("gpg");
