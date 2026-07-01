@@ -21,6 +21,7 @@ pub struct MyApp {
     pub err: String,
     pub page: Pages,
     pub cert_status: CertStatus,
+    #[cfg(target_arch = "wasm32")]
     pub show_warning: bool,
     pub style: eframe::egui::style::Style,
     #[cfg(target_arch = "wasm32")]
@@ -53,6 +54,7 @@ impl Default for MyApp {
             cert_status: CertStatus::default(),
             page: Pages::default(),
             style: eframe::egui::style::Style::default(),
+            #[cfg(target_arch = "wasm32")]
             show_warning: true,
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
@@ -99,17 +101,17 @@ impl eframe::App for MyApp {
             match self.page {
                 Pages::Certs => {
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        see_certs(self, ui);
+                        self.see_certs(ui);
                     });
                 }
                 Pages::NewCert => {
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        new_cert(self, ui);
+                        self.new_cert(ui);
                     });
                 },
                 Pages::Style => {
                     egui::ScrollArea::vertical().auto_shrink(egui::Vec2b::new(false, false)).show(ui, |ui| {
-                        style(self, ui);
+                        self.style(ui);
                     });
                 },
             }
