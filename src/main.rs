@@ -1,18 +1,20 @@
-#[cfg(not(target_arch = "wasm32"))]
-mod native;
 mod shared;
+
 #[cfg(target_arch = "wasm32")]
-mod wasm;
+#[path = "wasm/mod.rs"]
+mod platform;
 
 #[cfg(not(target_arch = "wasm32"))]
-use native::get_certs;
+#[path = "native/mod.rs"]
+mod platform;
+
+use platform::init_logging;
 use shared::MyApp;
-// #[cfg(target_arch = "wasm32")]
-// use wasm::get_and_display_certs;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions::default();
+    init_logging();
     eframe::run_native(
         "Hello egui",
         options,
@@ -25,6 +27,8 @@ fn main() {
     use eframe::wasm_bindgen::JsCast as _;
 
     let web_options = eframe::WebOptions::default();
+
+    init_logging();
 
     wasm_bindgen_futures::spawn_local(async {
         let document = web_sys::window()

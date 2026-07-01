@@ -4,12 +4,12 @@ use sequoia_openpgp::Cert;
 use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::Parse;
 
-fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
+pub fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
     let mut certs = vec![];
     for cert in CertParser::from_reader(armoured.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => certs.push(cert),
-            Err(e) => eprintln!("Skipping malformed cert: {}", e),
+            Err(e) => log::error!("Skipping malformed cert: {}", e),
         }
     }
     Ok(certs)
@@ -39,4 +39,9 @@ impl MyApp {
             }
         }
     }
+}
+
+pub fn init_logging() {
+    eframe::WebLogger::init(log::LevelFilter::Trace).ok();
+    console_error_panic_hook::set_once();
 }

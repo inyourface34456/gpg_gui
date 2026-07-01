@@ -13,7 +13,32 @@ impl MyApp {
         if ui.button("Trigger Error").clicked() {
             self.err = String::from("This is an error")
         }
+
         self.display_error(ui.ctx());
+
+        if ui.button("Test Error").clicked() {
+            log::error!("Test Error");
+        }
+
+        if ui.button("Test Warn").clicked() {
+            log::warn!("Test Warn");
+        }
+
+        if ui.button("Test Info").clicked() {
+            log::info!("Test Info");
+        }
+
+        if ui.button("Test Debug").clicked() {
+            log::debug!("Test Debug");
+        }
+
+        if ui.button("Test Trace").clicked() {
+            log::trace!("Test Trace");
+        }
+
+        if ui.button("Test Panic").clicked() {
+            panic!("Test")
+        }
     }
 
     pub fn see_certs(&mut self, ui: &mut Ui) {
