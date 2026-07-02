@@ -13,7 +13,6 @@ use std::{
     os::unix::fs::MetadataExt,
     process::Command,
 };
-use zeroize::Zeroize;
 
 /// Interface must be identical between wasm and native.
 
