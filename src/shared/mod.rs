@@ -2,15 +2,21 @@ mod new_cert_status;
 mod page_code;
 mod pages;
 
-use crate::platform::get_certs;
+use crate::platform::Storage;
 use eframe::egui;
 use egui::Context;
 use new_cert_status::CertStatus;
 use pages::Pages;
 use sequoia_openpgp::Cert;
+use sequoia_openpgp::cert::CipherSuite;
+use serde::{Deserialize, Serialize};
+use std::marker::PointeeSized;
+use zeroize::Zeroize;
 
+#[derive(Serialize, Deserialize)]
 pub struct MyApp {
     pub ui_scale: f32,
+    #[serde(skip_serializing, skip_deserializing)]
     pub certs: Vec<Cert>,
     pub err: String,
     pub page: Pages,
@@ -20,31 +26,30 @@ pub struct MyApp {
     pub style: eframe::egui::style::Style,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
+    storage: Storage,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
-        #[cfg(not(target_arch = "wasm32"))]
-        let mut certs: Vec<Cert> = vec![];
-        #[allow(unused_mut)] // fixes warning when building for wasm32
-        let mut err = "".to_owned();
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            if let Ok(cert) = get_certs() {
-                certs = cert;
-            } else {
-                log::error!("gpg --export -a output corrupted or failed");
-                err = String::from("gpg --export -a output corrupted or failed");
+        let storage = match Storage::read() {
+            Some(mut myapp) => {
+                myapp.certs = match crate::platform::get_certs("") {
+                    Ok(data) => data,
+                    Err(err) => {
+                        log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                        vec![]
+                    }
+                };
+                myapp.cert_status.crypto_algo = CipherSuite::Cv25519;
+                return myapp;
             }
-        }
-
-        #[cfg(target_arch = "wasm32")]
-        let certs = vec![];
+            None => Storage::default(),
+        };
 
         Self {
             ui_scale: 1.,
-            err,
-            certs,
+            err: String::new(),
+            certs: vec![],
             cert_status: CertStatus::default(),
             page: Pages::default(),
             style: eframe::egui::style::Style::default(),
@@ -52,6 +57,7 @@ impl Default for MyApp {
             show_warning: true,
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
+            storage,
         }
     }
 }
@@ -76,6 +82,13 @@ impl eframe::App for MyApp {
                     ui.selectable_value(&mut self.page, Pages::NewCert, "New Cert");
                     ui.selectable_value(&mut self.page, Pages::Style, "Style");
                     ui.selectable_value(&mut self.page, Pages::Debug, "Debug");
+                    if ui.button("Save").clicked() {
+                        self.cert_status.password.zeroize();
+                        self.cert_status.secret_text.zeroize();
+                        self.cert_status.rev_text.zeroize();
+                        let immutable_self: &MyApp = &self;
+                        self.storage.write(immutable_self);
+                    }
                     // ui.selectable_value(&mut self.page, Pages::About, "About");
                 });
             });

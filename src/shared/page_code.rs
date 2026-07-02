@@ -45,7 +45,6 @@ impl MyApp {
     }
 
     pub fn see_certs(&mut self, ui: &mut Ui) {
-        #[cfg(target_arch = "wasm32")]
         self.get_and_display_certs(ui);
 
         for i in &self.certs {
@@ -69,21 +68,6 @@ impl MyApp {
     pub fn new_cert(&mut self, ui: &mut Ui) {
         ui.heading("New Certifacate");
         ui.separator();
-        // ui.horizontal(|ui| {
-        //     ui.label("Key Flags");
-        //     self.cert_status.key_flags.show(ui);
-        // });
-        ui.add_space(7.);
-
-        // let key_flags = KeyFlags::new([0]);
-        // // ["Authentication", "Certification", "Sigining", "Transport Encryption", "Storage Encryption"]
-        // let enabled_flags = self.cert_status.key_flags.selected_by_pos();
-        // key_flags
-        //     .set_authentication_to(enabled_flags[0])
-        //     .set_certification_to(enabled_flags[1])
-        //     .set_signing_to(enabled_flags[2])
-        //     .set_transport_encryption_to(enabled_flags[3])
-        //     .set_storage_encryption_to(enabled_flags[4]);
 
         ui.horizontal(|ui| {
             ui.label("Primary Crypto Algorithm");
