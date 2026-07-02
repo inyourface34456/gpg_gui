@@ -1,3 +1,4 @@
+#![feature(sized_hierarchy, const_trait_impl)]
 mod shared;
 
 #[cfg(target_arch = "wasm32")]

@@ -1,8 +1,14 @@
 use crate::MyApp;
+use base64::Engine;
 use eframe::egui::Ui;
+use postcard::{from_bytes, to_allocvec as to_vec};
 use sequoia_openpgp::Cert;
 use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::Parse;
+use serde::{Deserialize, Serialize};
+use web_sys::window;
+
+/// Interface must be identical between wasm and native.
 
 pub fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
     let mut certs = vec![];
@@ -16,7 +22,6 @@ pub fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
 }
 
 impl MyApp {
-    #[cfg(target_arch = "wasm32")]
     pub fn get_and_display_certs(&mut self, ui: &mut Ui) {
         ui.label("GPG armoured output: ");
         egui::ScrollArea::vertical()
@@ -36,6 +41,8 @@ impl MyApp {
                 self.err = String::new();
             } else {
                 self.err = "corrupted gpg --export -a output".to_owned();
+                self.display_error(ui.ctx());
+                log::error!("{}", self.err)
             }
         }
     }
@@ -44,4 +51,158 @@ impl MyApp {
 pub fn init_logging() {
     eframe::WebLogger::init(log::LevelFilter::Trace).ok();
     console_error_panic_hook::set_once();
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Storage;
+
+impl Storage {
+    pub fn set_item(&mut self, key: &str, value: &str) -> Result<(), String> {
+        let window = window().ok_or("no global `window` exists")?;
+        let storage = window
+            .local_storage()
+            .map_err(|err| {
+                if err.is_string() {
+                    format!("{}", err.as_string().unwrap())
+                } else {
+                    format!("{:?}", err)
+                }
+            })?
+            .ok_or("no localStorage available")?;
+        storage.set_item(key, value).map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+        Ok(())
+    }
+
+    pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
+        let window = window().ok_or("no global `window` exists")?;
+        let storage = window
+            .local_storage()
+            .map_err(|err| {
+                if err.is_string() {
+                    format!("{}", err.as_string().unwrap())
+                } else {
+                    format!("{:?}", err)
+                }
+            })?
+            .ok_or("no localStorage available")?;
+        storage.get_item(key).map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })
+    }
+
+    pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
+        let window = window().ok_or("no global `window` exists")?;
+        let storage = window
+            .local_storage()
+            .map_err(|err| {
+                if err.is_string() {
+                    format!("{}", err.as_string().unwrap())
+                } else {
+                    format!("{:?}", err)
+                }
+            })?
+            .ok_or("no localStorage available")?;
+        storage.remove_item(key).map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+        Ok(())
+    }
+
+    pub fn write(&self, data: &MyApp) {
+        let myapp = match to_vec(&data) {
+            Ok(data) => data,
+            Err(err) => {
+                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                return;
+            }
+        };
+        let engine = base64::engine::GeneralPurpose::new(
+            &base64::alphabet::URL_SAFE,
+            base64::engine::GeneralPurposeConfig::new(),
+        );
+        let data = engine.encode(myapp);
+
+        fn set_item(key: &str, value: &str) -> Result<(), String> {
+            let window = window().ok_or("no global `window` exists")?;
+            let storage = window
+                .local_storage()
+                .map_err(|err| {
+                    if err.is_string() {
+                        format!("{}", err.as_string().unwrap())
+                    } else {
+                        format!("{:?}", err)
+                    }
+                })?
+                .ok_or("no localStorage available")?;
+            storage.set_item(key, value).map_err(|err| {
+                if err.is_string() {
+                    format!("{}", err.as_string().unwrap())
+                } else {
+                    format!("{:?}", err)
+                }
+            })?;
+            Ok(())
+        }
+
+        match set_item("MyApp", &data) {
+            Ok(_) => {}
+            Err(err) => {
+                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                return;
+            }
+        };
+    }
+
+    pub fn read() -> Option<MyApp> {
+        let mut storage = Storage::default();
+        let data = match storage.get_item("MyApp") {
+            Ok(data) => data.unwrap_or_default(),
+            Err(err) => {
+                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                return None;
+            }
+        };
+
+        let engine = base64::engine::GeneralPurpose::new(
+            &base64::alphabet::URL_SAFE,
+            base64::engine::GeneralPurposeConfig::new(),
+        );
+        let data = match engine.decode(data) {
+            Ok(data) => data,
+            Err(err) => {
+                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                return None;
+            }
+        };
+
+        let myapp: MyApp = match from_bytes(&data) {
+            Ok(data) => data,
+            Err(err) => {
+                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                return None;
+            }
+        };
+
+        Some(myapp)
+    }
+}
+
+impl Default for Storage {
+    fn default() -> Self {
+        Storage
+    }
 }

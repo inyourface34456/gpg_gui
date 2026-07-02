@@ -1,6 +1,9 @@
 use sequoia_openpgp::cert::CipherSuite;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct CertStatus {
+    #[serde(skip_serializing, skip_deserializing)]
     pub crypto_algo: CipherSuite,
     pub display_name: String,
     pub comment: String,
