@@ -10,7 +10,6 @@ use pages::Pages;
 use sequoia_openpgp::Cert;
 use sequoia_openpgp::cert::CipherSuite;
 use serde::{Deserialize, Serialize};
-use std::marker::PointeeSized;
 use zeroize::Zeroize;
 
 #[derive(Serialize, Deserialize)]
