@@ -1,6 +1,7 @@
 mod new_cert_status;
 mod page_code;
 mod pages;
+mod style_page_code;
 
 use crate::platform::Storage;
 use eframe::egui;
