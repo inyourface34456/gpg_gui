@@ -35,14 +35,16 @@ impl MyApp {
                 );
             });
 
-        if ui.button("Enter").clicked() {
-            if let Ok(certs) = get_certs(&self.gpg_armoured) {
-                self.certs = certs;
-                self.err = String::new();
-            } else {
-                self.err = "corrupted gpg --export -a output".to_owned();
-                self.display_error(ui.ctx());
-                log::error!("{}", self.err)
+        if !self.gpg_armoured.is_empty() {
+            match get_certs(&self.gpg_armoured) {
+                Ok(certs) => {
+                    self.certs = certs;
+                    self.err = String::new();
+                }
+                Err(err) => {
+                    self.err = err;
+                    log::error!("{}", self.err);
+                }
             }
         }
     }

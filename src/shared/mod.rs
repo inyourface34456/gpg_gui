@@ -106,7 +106,7 @@ impl eframe::App for MyApp {
                 }
             }
 
-            self.display_error(ctx);
+            // self.display_error(ctx, file!(), line!());
 
             ui.add_space(20.);
             match self.page {
@@ -136,11 +136,14 @@ impl eframe::App for MyApp {
 }
 
 impl MyApp {
-    pub fn display_error(&mut self, ctx: &Context) {
+    pub fn display_error(&mut self, ctx: &Context, file: &str, line: u32) {
         let err_window = egui::containers::Window::new("Error");
         if !self.err.is_empty() {
             err_window.show(ctx, |ui| {
-                ui.label(format!("Error: {}", self.err));
+                ui.label(format!(
+                    "Error: {}\nFile: {} @ line {}",
+                    self.err, file, line
+                ));
                 if ui.button("Dismiss").clicked() {
                     self.err = String::new();
                 }

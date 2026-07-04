@@ -14,7 +14,7 @@ impl MyApp {
             self.err = String::from("This is an error")
         }
 
-        self.display_error(ui.ctx());
+        self.display_error(ui.ctx(), file!(), line!());
 
         if ui.button("Test Error").clicked() {
             log::error!("Test Error");
@@ -172,7 +172,7 @@ impl MyApp {
             Err(err) => {
                 self.err = err.to_string();
                 log::error!("{}", err);
-                self.display_error(ui.ctx());
+                self.display_error(ui.ctx(), file!(), line!());
                 self.cert_status.expire_date
             }
         };
@@ -226,7 +226,7 @@ impl MyApp {
                                 Err(err) => {
                                     self.err = err.to_string();
                                     log::error!("{}", err);
-                                    self.display_error(ui.ctx());
+                                    self.display_error(ui.ctx(), file!(), line!());
                                     vec![]
                                 }
                             };
@@ -235,7 +235,7 @@ impl MyApp {
                                 Err(err) => {
                                     self.err = err.to_string();
                                     log::error!("{}", err);
-                                    self.display_error(ui.ctx());
+                                    self.display_error(ui.ctx(), file!(), line!());
                                     String::new()
                                 }
                             };
@@ -244,7 +244,7 @@ impl MyApp {
                                 Err(err) => {
                                     self.err = err.to_string();
                                     log::error!("{}", err);
-                                    self.display_error(ui.ctx());
+                                    self.display_error(ui.ctx(), file!(), line!());
                                     String::new()
                                 }
                             };
@@ -258,7 +258,7 @@ impl MyApp {
                                 Err(err) => {
                                     self.err = err.to_string();
                                     log::error!("{}", err);
-                                    self.display_error(ui.ctx());
+                                    self.display_error(ui.ctx(), file!(), line!());
                                     return;
                                 }
                             };
@@ -269,7 +269,7 @@ impl MyApp {
                         Err(err) => {
                             self.err = err.to_string();
                             log::error!("{}", err);
-                            self.display_error(ui.ctx());
+                            self.display_error(ui.ctx(), file!(), line!());
                         }
                     }
                 }

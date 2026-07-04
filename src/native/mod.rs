@@ -38,7 +38,7 @@ impl MyApp {
             Err(err) => {
                 self.err = err.to_string();
                 log::error!("{}@{}: {}", file!(), line!(), err.to_string());
-                self.display_error(ui.ctx());
+                self.display_error(ui.ctx(), file!(), line!());
                 return;
             }
         };
