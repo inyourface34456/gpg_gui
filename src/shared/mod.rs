@@ -73,7 +73,11 @@ impl eframe::App for MyApp {
                 if (key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
                     self.ui_scale *= 0.9
                 }
+                if let Some(multi_touch) = key.multi_touch() {
+                    self.ui_scale *= multi_touch.zoom_delta;
+                }
             });
+
             ctx.set_zoom_factor(self.ui_scale);
 
             egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
