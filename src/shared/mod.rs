@@ -74,7 +74,11 @@ impl eframe::App for MyApp {
                     self.ui_scale *= 0.9
                 }
                 if let Some(multi_touch) = key.multi_touch() {
-                    self.ui_scale *= multi_touch.zoom_delta;
+                    let raw_delta = multi_touch.zoom_delta;
+                    if (raw_delta - 1.0).abs() > 0.008 {
+                        let damped = 1.0 + (raw_delta - 1.0) * 0.5;
+                        self.ui_scale *= damped;
+                    }
                 }
             });
 
