@@ -10,7 +10,7 @@ use web_sys::window;
 
 /// Interface must be identical between wasm and native.
 
-pub fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
+pub fn get_certs(armoured: &str, priv_key: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     let mut certs = vec![];
     for cert in CertParser::from_reader(armoured.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
@@ -18,7 +18,16 @@ pub fn get_certs(armoured: &str) -> Result<Vec<Cert>, String> {
             Err(e) => log::error!("Skipping malformed cert: {}", e),
         }
     }
-    Ok(certs)
+
+    let mut priv_keys = vec![];
+    for cert in CertParser::from_reader(priv_key.as_bytes()).map_err(|e| e.to_string())? {
+        match cert {
+            Ok(cert) => priv_keys.push(cert),
+            Err(e) => log::error!("Skipping malformed cert: {}", e),
+        }
+    }
+
+    Ok((certs, priv_keys))
 }
 
 impl MyApp {
@@ -35,10 +44,23 @@ impl MyApp {
                 );
             });
 
+        ui.label("GPG armoured output: ");
+        egui::ScrollArea::vertical()
+            .max_height(200.0)
+            .min_scrolled_height(200.0)
+            .show(ui, |ui| {
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.gpg_armoured_priv)
+                        .desired_width(500.)
+                        .desired_rows(1), // start small, grows up to max_height
+                );
+            });
+
         if !self.gpg_armoured.is_empty() {
-            match get_certs(&self.gpg_armoured) {
-                Ok(certs) => {
-                    self.certs = certs;
+            match get_certs(&self.gpg_armoured, &self.gpg_armoured_priv) {
+                Ok((public, private)) => {
+                    self.certs = public;
+                    self.priv_certs = private;
                     self.err = String::new();
                 }
                 Err(err) => {
@@ -59,27 +81,27 @@ pub fn init_logging() {
 pub struct Storage;
 
 impl Storage {
-    pub fn set_item(&mut self, key: &str, value: &str) -> Result<(), String> {
-        let window = window().ok_or("no global `window` exists")?;
-        let storage = window
-            .local_storage()
-            .map_err(|err| {
-                if err.is_string() {
-                    format!("{}", err.as_string().unwrap())
-                } else {
-                    format!("{:?}", err)
-                }
-            })?
-            .ok_or("no localStorage available")?;
-        storage.set_item(key, value).map_err(|err| {
-            if err.is_string() {
-                format!("{}", err.as_string().unwrap())
-            } else {
-                format!("{:?}", err)
-            }
-        })?;
-        Ok(())
-    }
+    // pub fn set_item(&mut self, key: &str, value: &str) -> Result<(), String> {
+    //     let window = window().ok_or("no global `window` exists")?;
+    //     let storage = window
+    //         .local_storage()
+    //         .map_err(|err| {
+    //             if err.is_string() {
+    //                 format!("{}", err.as_string().unwrap())
+    //             } else {
+    //                 format!("{:?}", err)
+    //             }
+    //         })?
+    //         .ok_or("no localStorage available")?;
+    //     storage.set_item(key, value).map_err(|err| {
+    //         if err.is_string() {
+    //             format!("{}", err.as_string().unwrap())
+    //         } else {
+    //             format!("{:?}", err)
+    //         }
+    //     })?;
+    //     Ok(())
+    // }
 
     pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
         let window = window().ok_or("no global `window` exists")?;
@@ -102,27 +124,27 @@ impl Storage {
         })
     }
 
-    pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
-        let window = window().ok_or("no global `window` exists")?;
-        let storage = window
-            .local_storage()
-            .map_err(|err| {
-                if err.is_string() {
-                    format!("{}", err.as_string().unwrap())
-                } else {
-                    format!("{:?}", err)
-                }
-            })?
-            .ok_or("no localStorage available")?;
-        storage.remove_item(key).map_err(|err| {
-            if err.is_string() {
-                format!("{}", err.as_string().unwrap())
-            } else {
-                format!("{:?}", err)
-            }
-        })?;
-        Ok(())
-    }
+    // pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
+    //     let window = window().ok_or("no global `window` exists")?;
+    //     let storage = window
+    //         .local_storage()
+    //         .map_err(|err| {
+    //             if err.is_string() {
+    //                 format!("{}", err.as_string().unwrap())
+    //             } else {
+    //                 format!("{:?}", err)
+    //             }
+    //         })?
+    //         .ok_or("no localStorage available")?;
+    //     storage.remove_item(key).map_err(|err| {
+    //         if err.is_string() {
+    //             format!("{}", err.as_string().unwrap())
+    //         } else {
+    //             format!("{:?}", err)
+    //         }
+    //     })?;
+    //     Ok(())
+    // }
 
     pub fn write(&self, data: &MyApp) {
         let myapp = match to_vec(&data) {

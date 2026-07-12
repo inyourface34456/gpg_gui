@@ -5,6 +5,7 @@ pub enum Pages {
     Certs,
     NewCert,
     Style,
+    Sign,
     Debug,
 }
 

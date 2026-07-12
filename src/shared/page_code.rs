@@ -2,7 +2,8 @@ use crate::MyApp;
 use egui::Ui;
 use sequoia_openpgp::Packet;
 use sequoia_openpgp::armor::{Kind, Writer};
-use sequoia_openpgp::cert::{CertBuilder, CipherSuite};
+use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
+use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::Marshal;
 use sequoia_openpgp::serialize::SerializeInto;
 use sequoia_openpgp::types::KeyFlags;
@@ -44,7 +45,24 @@ impl MyApp {
     pub fn see_certs(&mut self, ui: &mut Ui) {
         self.get_and_display_certs(ui);
 
+        ui.label("Public Keys:");
         for i in &self.certs {
+            ui.label(format!(
+                "User Id: {}",
+                match i
+                    .userids()
+                    .map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string())
+                    .next()
+                {
+                    Some(e) => e.to_string(),
+                    None => String::from("No names in export"),
+                }
+            ));
+        }
+
+        ui.add_space(10.);
+        ui.label("Private Keys");
+        for i in &self.priv_certs {
             ui.label(format!(
                 "User Id: {}",
                 match i
@@ -239,6 +257,29 @@ impl MyApp {
                                     String::new()
                                 }
                             };
+
+                            match CertParser::from_reader(self.cert_status.cert_text.as_bytes())
+                                .map_err(|e| e.to_string())
+                            {
+                                Ok(cert) => {
+                                    for cert in cert {
+                                        self.certs.push(match cert {
+                                            Ok(cert) => cert,
+                                            Err(err) => {
+                                                self.err = err.to_string();
+                                                log::error!("{}", err);
+                                                break;
+                                            }
+                                        });
+                                    }
+                                }
+                                Err(err) => {
+                                    self.err = err.to_string();
+                                    log::error!("{}", err);
+                                    // self.display_error(ui.ctx(), file!(), line!());
+                                }
+                            }
+
                             self.cert_status.secret_text = match cert.as_tsk().armored().to_vec() {
                                 Ok(bytes) => String::from_utf8(bytes).unwrap_or_default(),
                                 Err(err) => {
@@ -248,6 +289,29 @@ impl MyApp {
                                     String::new()
                                 }
                             };
+
+                            match CertParser::from_reader(self.cert_status.secret_text.as_bytes())
+                                .map_err(|e| e.to_string())
+                            {
+                                Ok(cert) => {
+                                    for cert in cert {
+                                        self.priv_certs.push(match cert {
+                                            Ok(cert) => cert,
+                                            Err(err) => {
+                                                self.err = err.to_string();
+                                                log::error!("{}", err);
+                                                break;
+                                            }
+                                        });
+                                    }
+                                }
+                                Err(err) => {
+                                    self.err = err.to_string();
+                                    log::error!("{}", err);
+                                    // self.display_error(ui.ctx(), file!(), line!());
+                                }
+                            }
+
                             let mut buf = Vec::new();
                             let mut w = match Writer::with_headers(
                                 &mut buf,
@@ -288,14 +352,27 @@ impl MyApp {
                 .show(ui.ctx(), |ui| {
                     egui::ScrollArea::horizontal().show(ui, |ui| {
                         ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN!");
-                        ui.code(format!("Certificate: \n{}", cert_text));
-                        ui.code(format!("Revocation Certificate: \n{}", rev_text));
-                        ui.code(format!("Private Key: \n{}", secret_text));
+                        ui.label(
+                            egui::RichText::new(format!("Certificate: \n{}", cert_text))
+                                .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
+                        );
+                        ui.label(
+                            egui::RichText::new(format!("Revocation Certificate: \n{}", rev_text))
+                                .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
+                        );
+                        ui.label(
+                            egui::RichText::new(format!("Private Key: \n{}", secret_text))
+                                .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
+                        );
                         if ui.button("Dismiss").clicked() {
                             self.cert_status.show_window = false;
                         }
                     });
                 });
         }
+    }
+
+    pub fn sign(&mut self, _ui: &mut Ui) {
+        return;
     }
 }

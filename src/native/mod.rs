@@ -16,7 +16,8 @@ use std::{
 
 /// Interface must be identical between wasm and native.
 
-pub fn get_certs(_: &str) -> Result<Vec<Cert>, String> {
+pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
+    log::info!("getting certs");
     let mut command = Command::new("gpg");
     command.arg("--export").arg("-a");
     let output = command.output().map_err(|e| e.to_string())?;
@@ -28,12 +29,31 @@ pub fn get_certs(_: &str) -> Result<Vec<Cert>, String> {
             Err(e) => log::error!("Skipping malformed cert: {}", e),
         }
     }
-    Ok(certs)
+
+    let mut command = Command::new("gpg");
+    command.arg("--export-secret-keys").arg("-a");
+    let output = command.output().map_err(|e| e.to_string())?;
+    let armored_output = String::from_utf8_lossy(&output.stdout);
+    let mut priv_certs = vec![];
+    for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
+        match cert {
+            Ok(cert) => priv_certs.push(cert),
+            Err(e) => log::error!("Skipping malformed cert: {}", e),
+        }
+    }
+
+    Ok((
+        certs, priv_certs, // vec![]
+    ))
 }
 
 impl MyApp {
     pub fn get_and_display_certs(&mut self, ui: &mut Ui) {
-        let certs = match get_certs("") {
+        if !self.certs.is_empty() || !self.priv_certs.is_empty() {
+            return;
+        }
+
+        let certs = match get_certs("", "") {
             Ok(certs) => certs,
             Err(err) => {
                 self.err = err.to_string();
@@ -42,7 +62,8 @@ impl MyApp {
                 return;
             }
         };
-        self.certs = certs;
+        self.certs = certs.0;
+        self.priv_certs = certs.1;
     }
 }
 
@@ -58,27 +79,27 @@ pub struct Storage {
 impl Storage {
     const FILENAME: &'static str = "data";
 
-    // yes none of these cannot technicly fail, but i want parody between native and wasm code
-    pub fn set_item(&mut self, key: &str, value: &str) -> Result<(), String> {
-        match self.storage.insert(key.into(), value.into()) {
-            Some(_) => Ok(()),
-            None => Ok(()),
-        }
-    }
+    // // yes none of these cannot technicly fail, but i want parody between native and wasm code
+    // pub fn set_item(&mut self, key: &str, value: &str) -> Result<(), String> {
+    //     match self.storage.insert(key.into(), value.into()) {
+    //         Some(_) => Ok(()),
+    //         None => Ok(()),
+    //     }
+    // }
 
-    pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
-        match self.storage.get(&key.to_string()) {
-            Some(item) => Ok(Some(item.clone())),
-            None => Ok(None),
-        }
-    }
+    // pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
+    //     match self.storage.get(&key.to_string()) {
+    //         Some(item) => Ok(Some(item.clone())),
+    //         None => Ok(None),
+    //     }
+    // }
 
-    pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
-        match self.storage.remove(&key.to_string()) {
-            Some(_) => Ok(()),
-            None => Err(String::from("item does not exist")),
-        }
-    }
+    // pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
+    //     match self.storage.remove(&key.to_string()) {
+    //         Some(_) => Ok(()),
+    //         None => Err(String::from("item does not exist")),
+    //     }
+    // }
 
     // layout: MyApp (no need to re init storage struct)
     pub fn write(&self, data: &MyApp) {
@@ -126,7 +147,7 @@ impl Storage {
         let mut data: Vec<u8> = Vec::with_capacity(file_metadata.size() as usize);
         match file_handle.read_to_end(&mut data) {
             Ok(bytes) => {
-                log::error!("read in {} bytes", bytes);
+                log::info!("read in {} bytes", bytes);
             }
             Err(err) => {
                 log::error!("{}@{}: {}", file!(), line!(), err.to_string());

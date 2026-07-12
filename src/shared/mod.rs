@@ -18,6 +18,8 @@ pub struct MyApp {
     pub ui_scale: f32,
     #[serde(skip_serializing, skip_deserializing)]
     pub certs: Vec<Cert>,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub priv_certs: Vec<Cert>,
     pub err: String,
     pub page: Pages,
     pub cert_status: CertStatus,
@@ -26,6 +28,8 @@ pub struct MyApp {
     pub style: eframe::egui::style::Style,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
+    #[cfg(target_arch = "wasm32")]
+    pub gpg_armoured_priv: String,
     storage: Storage,
 }
 
@@ -33,11 +37,11 @@ impl Default for MyApp {
     fn default() -> Self {
         let storage = match Storage::read() {
             Some(mut myapp) => {
-                myapp.certs = match crate::platform::get_certs("") {
-                    Ok(data) => data,
+                (myapp.certs, myapp.priv_certs) = match crate::platform::get_certs("", "") {
+                    Ok(certs) => certs,
                     Err(err) => {
                         log::error!("{}@{}: {}", file!(), line!(), err.to_string());
-                        vec![]
+                        (vec![], vec![])
                     }
                 };
                 myapp.cert_status.crypto_algo = CipherSuite::Cv25519;
@@ -50,6 +54,7 @@ impl Default for MyApp {
             ui_scale: 1.,
             err: String::new(),
             certs: vec![],
+            priv_certs: vec![],
             cert_status: CertStatus::default(),
             page: Pages::default(),
             style: eframe::egui::style::Style::default(),
@@ -57,6 +62,8 @@ impl Default for MyApp {
             show_warning: true,
             #[cfg(target_arch = "wasm32")]
             gpg_armoured: String::new(),
+            #[cfg(target_arch = "wasm32")]
+            gpg_armoured_priv: String::new(),
             storage,
         }
     }
@@ -88,12 +95,16 @@ impl eframe::App for MyApp {
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut self.page, Pages::Certs, "Certs");
                     ui.selectable_value(&mut self.page, Pages::NewCert, "New Cert");
+                    // ui.selectable_value(&mut self.page, Pages::Sign, "Sign/Verify");
                     ui.selectable_value(&mut self.page, Pages::Style, "Style");
                     ui.selectable_value(&mut self.page, Pages::Debug, "Debug");
                     if ui.button("Save").clicked() {
                         self.cert_status.password.zeroize();
                         self.cert_status.secret_text.zeroize();
                         self.cert_status.rev_text.zeroize();
+                        self.priv_certs = vec![];
+                        #[cfg(target_arch = "wasm32")]
+                        self.gpg_armoured_priv.zeroize();
                         let immutable_self: &MyApp = &self;
                         self.storage.write(immutable_self);
                     }
@@ -138,6 +149,11 @@ impl eframe::App for MyApp {
                         self.debug(ui);
                     });
                 }
+                Pages::Sign => {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        self.sign(ui);
+                    });
+                },
             }
         });
     }
