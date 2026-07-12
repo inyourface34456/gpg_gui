@@ -98,6 +98,7 @@ impl eframe::App for MyApp {
                     // ui.selectable_value(&mut self.page, Pages::Sign, "Sign/Verify");
                     ui.selectable_value(&mut self.page, Pages::Style, "Style");
                     ui.selectable_value(&mut self.page, Pages::Debug, "Debug");
+                    ui.selectable_value(&mut self.page, Pages::About, "About");
                     if ui.button("Save").clicked() {
                         self.cert_status.password.zeroize();
                         self.cert_status.secret_text.zeroize();
@@ -108,7 +109,6 @@ impl eframe::App for MyApp {
                         let immutable_self: &MyApp = &self;
                         self.storage.write(immutable_self);
                     }
-                    // ui.selectable_value(&mut self.page, Pages::About, "About");
                 });
             });
 
@@ -154,6 +154,11 @@ impl eframe::App for MyApp {
                         self.sign(ui);
                     });
                 },
+                Pages::About => {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        self.about(ui);
+                    });
+                }
             }
         });
     }

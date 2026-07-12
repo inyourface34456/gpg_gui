@@ -1,5 +1,6 @@
 set -o errexit
 
+echo $(($(cat VERSION)+1)) > VERSION
 find . -name '*.rs' -exec sed -i 's/[ \t]*$//' {} +
 cargo fmt
 trunk build --release --minify

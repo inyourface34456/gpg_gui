@@ -7,6 +7,7 @@ pub enum Pages {
     Style,
     Sign,
     Debug,
+    About,
 }
 
 impl Default for Pages {

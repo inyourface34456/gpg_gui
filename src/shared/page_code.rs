@@ -375,4 +375,13 @@ impl MyApp {
     pub fn sign(&mut self, _ui: &mut Ui) {
         return;
     }
+
+    pub fn about(&mut self, ui: &mut Ui) {
+        ui.label(format!(
+            "Version: {} ({})",
+            include_str!("../../VERSION").replace('\n', ""),
+            env!("GIT_HASH")
+        ));
+        ui.label(format!("Target Arch: {}", std::env::consts::ARCH));
+    }
 }
