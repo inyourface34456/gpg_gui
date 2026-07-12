@@ -87,12 +87,12 @@ impl Storage {
     //     }
     // }
 
-    // pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
-    //     match self.storage.get(&key.to_string()) {
-    //         Some(item) => Ok(Some(item.clone())),
-    //         None => Ok(None),
-    //     }
-    // }
+    pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
+        match self.storage.get(&key.to_string()) {
+            Some(item) => Ok(Some(item.clone())),
+            None => Ok(None),
+        }
+    }
 
     // pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
     //     match self.storage.remove(&key.to_string()) {

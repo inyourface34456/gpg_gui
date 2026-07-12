@@ -24,3 +24,7 @@ There is no packeges on any repos, and if there are, they are not made or endors
 # Windows and MacOS native builds
 
 Right now I have no plans for a MacOS, as i do not own a Mac nor do I plan on paying there 100 USD per year. Windows builds are a possibilty, once i can build for it. 
+
+# Misc
+
+I recently (7-11-26) started signing all commits, and decided to retoactivly singn all commits in the project. Thge way i did this made it look like all of the commits haoppened on the same day, which they did not. All of the content and commit messages are intact however.
