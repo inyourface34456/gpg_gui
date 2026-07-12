@@ -8,9 +8,9 @@ You should have a working knowledge of rust and PGP protocall, the ability to co
 
 # Current and planned features 
 
-- [ ] Certifacte import
+- [x] Certifacte import
   - [x] Puiblic keys
-  - [ ] Private Keys
+  - [x] Private Keys
 - [x] New certifcate
 - [ ] Sign
 - [ ] Verify
