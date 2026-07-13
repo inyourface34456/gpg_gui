@@ -1,12 +1,16 @@
 use crate::MyApp;
 use base64::Engine;
 use eframe::egui::Ui;
+use js_sys::{Array, Uint8Array};
 use postcard::{from_bytes, to_allocvec as to_vec};
 use sequoia_openpgp::Cert;
 use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::Parse;
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::*;
 use web_sys::window;
+use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, Url};
 
 /// Interface must be identical between wasm and native.
 
@@ -103,7 +107,7 @@ impl Storage {
     //     Ok(())
     // }
 
-    pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
+    fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
         let window = window().ok_or("no global `window` exists")?;
         let storage = window
             .local_storage()
@@ -229,4 +233,102 @@ impl Default for Storage {
     fn default() -> Self {
         Storage
     }
+}
+
+pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
+    let uint8_array = Uint8Array::from(data.as_slice());
+
+    let array = Array::new();
+    array.push(&uint8_array.buffer());
+
+    let blob_options = BlobPropertyBag::new();
+    blob_options.set_type("application/octet-stream");
+
+    let blob =
+        Blob::new_with_u8_array_sequence_and_options(&array, &blob_options).map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+
+    // 4. Create an object URL
+    let url = Url::create_object_url_with_blob(&blob).map_err(|err| {
+        if err.is_string() {
+            format!("{}", err.as_string().unwrap())
+        } else {
+            format!("{:?}", err)
+        }
+    })?;
+
+    // 5. Trigger download via hidden <a>
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+
+    let anchor: HtmlAnchorElement = document
+        .create_element("a")
+        .map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?
+        .dyn_into::<HtmlAnchorElement>()
+        .map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+
+    anchor.set_href(&url);
+    anchor.set_download(filename);
+    anchor
+        .style()
+        .set_property("display", "none")
+        .map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+
+    document
+        .body()
+        .unwrap()
+        .append_child(&anchor)
+        .map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+    anchor.click();
+    document
+        .body()
+        .unwrap()
+        .remove_child(&anchor)
+        .map_err(|err| {
+            if err.is_string() {
+                format!("{}", err.as_string().unwrap())
+            } else {
+                format!("{:?}", err)
+            }
+        })?;
+
+    // 6. Clean up
+    Url::revoke_object_url(&url).map_err(|err| {
+        if err.is_string() {
+            format!("{}", err.as_string().unwrap())
+        } else {
+            format!("{:?}", err)
+        }
+    })?;
+
+    Ok(())
 }

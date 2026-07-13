@@ -1,6 +1,12 @@
 use sequoia_openpgp::cert::CipherSuite;
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub enum BinOrAsc {
+    Bin,
+    Asc,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct CertStatus {
     #[serde(skip_serializing, skip_deserializing)]
@@ -14,7 +20,7 @@ pub struct CertStatus {
     pub show_window: bool,
     pub cert_text: String,
     pub secret_text: String,
-    pub rev_text: String,
+    pub bin_or_ask: BinOrAsc,
 }
 
 impl Default for CertStatus {
@@ -30,8 +36,8 @@ impl Default for CertStatus {
             password: String::new(),
             show_window: false,
             cert_text: String::new(),
-            rev_text: String::new(),
             secret_text: String::new(),
+            bin_or_ask: BinOrAsc::Asc,
         }
     }
 }

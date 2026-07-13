@@ -1,10 +1,11 @@
-use crate::MyApp;
+use std::fmt::format;
+
+use crate::shared::new_cert_status;
+use crate::{MyApp, platform};
 use egui::Ui;
 use sequoia_openpgp::Packet;
-use sequoia_openpgp::armor::{Kind, Writer};
 use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
 use sequoia_openpgp::parse::Parse;
-use sequoia_openpgp::serialize::Marshal;
 use sequoia_openpgp::serialize::SerializeInto;
 use sequoia_openpgp::types::KeyFlags;
 use zeroize::Zeroize;
@@ -239,6 +240,16 @@ impl MyApp {
                 Some(result) => {
                     match result {
                         Ok((cert, rev)) => {
+                            let cert = match cert.insert_packets(vec![Packet::from(rev.clone())]) {
+                                Ok(output) => output.0,
+                                Err(err) => {
+                                    self.err = err.to_string();
+                                    log::error!("{}", err);
+                                    self.display_error(ui.ctx(), file!(), line!());
+                                    return;
+                                }
+                            };
+
                             let armored: Vec<u8> = match cert.armored().to_vec() {
                                 Ok(cert) => cert,
                                 Err(err) => {
@@ -311,24 +322,6 @@ impl MyApp {
                                     // self.display_error(ui.ctx(), file!(), line!());
                                 }
                             }
-
-                            let mut buf = Vec::new();
-                            let mut w = match Writer::with_headers(
-                                &mut buf,
-                                Kind::PublicKey, // GPG uses PUBLIC KEY BLOCK for rev certs
-                                vec![("Comment", "Revocation certificate")],
-                            ) {
-                                Ok(output) => output,
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    self.display_error(ui.ctx(), file!(), line!());
-                                    return;
-                                }
-                            };
-                            let _ = Packet::from(rev).serialize(&mut w); // Signature → Packet, then serialize
-                            let _ = w.finalize();
-                            self.cert_status.rev_text = String::from_utf8(buf).unwrap_or_default();
                         }
                         Err(err) => {
                             self.err = err.to_string();
@@ -345,28 +338,104 @@ impl MyApp {
         // gated only by `show_window` (not tied to the click event).
         if self.cert_status.show_window {
             let cert_text = self.cert_status.cert_text.clone();
-            let rev_text = self.cert_status.rev_text.clone();
+            // let rev_text = self.cert_status.rev_text.clone();
             let secret_text = self.cert_status.secret_text.clone();
             egui::containers::Window::new("Certs")
                 .vscroll(true)
                 .show(ui.ctx(), |ui| {
                     egui::ScrollArea::horizontal().show(ui, |ui| {
-                        ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN!");
+                        ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the secret key.\n");
                         ui.label(
                             egui::RichText::new(format!("Certificate: \n{}", cert_text))
-                                .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
-                        );
-                        ui.label(
-                            egui::RichText::new(format!("Revocation Certificate: \n{}", rev_text))
                                 .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
                         );
                         ui.label(
                             egui::RichText::new(format!("Private Key: \n{}", secret_text))
                                 .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
                         );
-                        if ui.button("Dismiss").clicked() {
-                            self.cert_status.show_window = false;
-                        }
+                        ui.horizontal(|ui| {
+                            if ui.button("Dismiss").clicked() {
+                                self.cert_status.show_window = false;
+                            }
+                            egui::containers::ComboBox::from_label("Download Format").selected_text(format!("{:?}", self.cert_status.bin_or_ask)).show_ui(ui, |ui| {
+                                ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Bin, "Binary");
+                                ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Asc, "ASK");
+                            });
+                            if ui.button("Download").clicked() {
+                                if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
+                                    let cert_obj = match self.str_to_cert_obj(&self.cert_status.cert_text.clone()) {
+                                        Ok(cert) => cert,
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                            return;
+                                        }
+                                    };
+                                    let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
+                                        Ok(cert) => cert,
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                            return;
+                                        }
+                                    };
+                                    match platform::write_file("PublicKey", bin_dat) {
+                                        Ok(_) => {},
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                        }
+                                    }
+
+                                    let cert_obj = match self.str_to_cert_obj(&self.cert_status.secret_text.clone()) {
+                                        Ok(cert) => cert,
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                            return;
+                                        }
+                                    };
+                                    let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
+                                        Ok(cert) => cert,
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                            return;
+                                        }
+                                    };
+                                    match platform::write_file("SecretKey", bin_dat) {
+                                        Ok(_) => {},
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                        }
+                                    }
+                                } else {
+                                    match platform::write_file("PublicKey.asc", self.cert_status.cert_text.as_bytes().to_vec()) {
+                                        Ok(_) => {},
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                        }
+                                    }
+                                    match platform::write_file("SecretKey.asc", self.cert_status.secret_text.as_bytes().to_vec()) {
+                                        Ok(_) => {},
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            self.display_error(ui.ctx(), file!(), line!());
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     });
                 });
         }

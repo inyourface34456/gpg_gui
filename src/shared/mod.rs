@@ -1,3 +1,4 @@
+mod helpers;
 mod new_cert_status;
 mod page_code;
 mod pages;
@@ -102,7 +103,6 @@ impl eframe::App for MyApp {
                     if ui.button("Save").clicked() {
                         self.cert_status.password.zeroize();
                         self.cert_status.secret_text.zeroize();
-                        self.cert_status.rev_text.zeroize();
                         self.priv_certs = vec![];
                         #[cfg(target_arch = "wasm32")]
                         self.gpg_armoured_priv.zeroize();

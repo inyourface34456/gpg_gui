@@ -2013,6 +2013,7 @@ dependencies = [
  "egui",
  "env_logger",
  "getrandom 0.3.4",
+ "js-sys",
  "log",
  "postcard",
  "sequoia-openpgp",

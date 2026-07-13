@@ -87,12 +87,12 @@ impl Storage {
     //     }
     // }
 
-    pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
-        match self.storage.get(&key.to_string()) {
-            Some(item) => Ok(Some(item.clone())),
-            None => Ok(None),
-        }
-    }
+    // pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
+    //     match self.storage.get(&key.to_string()) {
+    //         Some(item) => Ok(Some(item.clone())),
+    //         None => Ok(None),
+    //     }
+    // }
 
     // pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
     //     match self.storage.remove(&key.to_string()) {
@@ -175,4 +175,10 @@ impl Default for Storage {
             storage: HashMap::new(),
         }
     }
+}
+
+pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
+    let mut file = fs::File::create(filename).map_err(|e| e.to_string())?;
+    file.write(data.as_slice()).map_err(|err| err.to_string())?;
+    Ok(())
 }
