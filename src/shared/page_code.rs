@@ -233,7 +233,7 @@ impl MyApp {
         {
             let mut result = None;
             if ui.button("Generate Certificate").clicked() {
-                let cert_builder;
+                let mut cert_builder;
                 if self.cert_status.never_expires {
                     cert_builder = CertBuilder::new()
                         .add_userid(self.cert_status.userid.clone())
@@ -251,6 +251,24 @@ impl MyApp {
                 self.cert_status.password.zeroize();
                 self.cert_status.password2.zeroize();
                 self.cert_status.show_window = true;
+
+                for i in self.cert_status.desired_subkeys.iter() {
+                    cert_builder = match i {
+                        new_cert_status::Subkeys::Authentcation => {
+                            cert_builder.add_authentication_subkey()
+                        }
+                        new_cert_status::Subkeys::Certification => {
+                            cert_builder.add_certification_subkey()
+                        }
+                        new_cert_status::Subkeys::Signing => cert_builder.add_signing_subkey(),
+                        new_cert_status::Subkeys::StorageEncryption => {
+                            cert_builder.add_storage_encryption_subkey()
+                        }
+                        new_cert_status::Subkeys::TransportEncryption => {
+                            cert_builder.add_transport_encryption_subkey()
+                        }
+                    };
+                }
 
                 result = Some(cert_builder.generate())
             }

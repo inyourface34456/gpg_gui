@@ -1,4 +1,3 @@
-use egui::WidgetText;
 use egui::{Response, Ui, Widget};
 
 pub struct MultiSelect<'a, T> {
