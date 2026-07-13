@@ -1,3 +1,4 @@
+use crate::custom_widgets::multi_select::MultiSelect;
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
@@ -5,7 +6,6 @@ use sequoia_openpgp::Packet;
 use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::SerializeInto;
-use sequoia_openpgp::types::KeyFlags;
 use zeroize::Zeroize;
 
 impl MyApp {
@@ -80,11 +80,11 @@ impl MyApp {
     }
 
     pub fn new_cert(&mut self, ui: &mut Ui) {
-        ui.heading("New Certifacate");
+        ui.heading("New Certificate");
         ui.separator();
 
         ui.horizontal(|ui| {
-            ui.label("Primary Crypto Algorithm");
+            ui.label("Encryption Algorithm");
             egui::ComboBox::from_label(" ")
                 .selected_text(format!("{:?}", self.cert_status.crypto_algo))
                 .show_ui(ui, |ui| {
@@ -130,6 +130,12 @@ impl MyApp {
                     );
                 });
         });
+
+        ui.add(MultiSelect::new(
+            "a",
+            new_cert_status::Subkeys::ALL_SUBKEYS,
+            &mut self.cert_status.desired_subkeys,
+        ));
 
         ui.horizontal(|ui| {
             ui.label("Display Name*: ");
@@ -197,7 +203,7 @@ impl MyApp {
         };
 
         ui.horizontal(|ui| {
-            ui.label("Passord: ");
+            ui.label("Password*: ");
             ui.add(
                 egui::TextEdit::singleline(&mut self.cert_status.password)
                     .password(true)
@@ -205,35 +211,48 @@ impl MyApp {
             );
         });
 
-        if !self.cert_status.display_name.is_empty() && !self.cert_status.password.is_empty() {
+        ui.horizontal(|ui| {
+            ui.label("Confirm Password*: ");
+            ui.add(
+                egui::TextEdit::singleline(&mut self.cert_status.password2)
+                    .password(true)
+                    .hint_text("Confirm Password"),
+            );
+        });
+
+        if self.cert_status.password != self.cert_status.password2 {
+            ui.label(
+                egui::RichText::new("Password does not match!")
+                    .color(egui::Color32::from_rgb(255, 0, 0)),
+            );
+        }
+
+        if !self.cert_status.display_name.is_empty()
+            && !self.cert_status.password.is_empty()
+            && self.cert_status.password == self.cert_status.password2
+        {
             let mut result = None;
-            if ui.button("Generate Certifcate").clicked() {
+            if ui.button("Generate Certificate").clicked() {
+                let cert_builder;
                 if self.cert_status.never_expires {
-                    result = Some(
-                        CertBuilder::new()
-                            .add_userid(self.cert_status.userid.clone())
-                            .set_cipher_suite(self.cert_status.crypto_algo)
-                            .add_signing_subkey()
-                            .add_subkey(KeyFlags::empty().set_transport_encryption(), None, None)
-                            .set_password(Some(self.cert_status.password.clone().into())) // optional: encrypt the secret keys
-                            .generate(),
-                    );
+                    cert_builder = CertBuilder::new()
+                        .add_userid(self.cert_status.userid.clone())
+                        .set_cipher_suite(self.cert_status.crypto_algo)
+                        .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 } else {
-                    result = Some(
-                        CertBuilder::new()
-                            .add_userid(self.cert_status.userid.clone())
-                            .set_cipher_suite(self.cert_status.crypto_algo)
-                            .set_validity_period(std::time::Duration::from_secs(
-                                self.cert_status.expire_date,
-                            ))
-                            .add_signing_subkey()
-                            .add_subkey(KeyFlags::empty().set_transport_encryption(), None, None)
-                            .set_password(Some(self.cert_status.password.clone().into())) // optional: encrypt the secret keys
-                            .generate(),
-                    );
+                    cert_builder = CertBuilder::new()
+                        .add_userid(self.cert_status.userid.clone())
+                        .set_cipher_suite(self.cert_status.crypto_algo)
+                        .set_validity_period(std::time::Duration::from_secs(
+                            self.cert_status.expire_date,
+                        ))
+                        .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 }
                 self.cert_status.password.zeroize();
+                self.cert_status.password2.zeroize();
                 self.cert_status.show_window = true;
+
+                result = Some(cert_builder.generate())
             }
 
             match result {

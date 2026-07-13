@@ -1,3 +1,4 @@
+mod custom_widgets;
 mod shared;
 
 #[cfg(target_arch = "wasm32")]
