@@ -1,7 +1,6 @@
 use crate::MyApp;
 use egui::Ui;
 use sequoia_openpgp::Cert;
-use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::Marshal;
 use sequoia_openpgp::serialize::SerializeInto;

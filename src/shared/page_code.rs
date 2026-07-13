@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
@@ -172,6 +170,8 @@ impl MyApp {
             user_id = String::new()
         }
 
+        self.cert_status.userid = user_id.clone();
+
         ui.label(format!("User ID: {}", user_id));
 
         let mut temp = self.cert_status.expire_date.to_string();
@@ -211,7 +211,7 @@ impl MyApp {
                 if self.cert_status.never_expires {
                     result = Some(
                         CertBuilder::new()
-                            .add_userid(self.cert_status.display_name.clone())
+                            .add_userid(self.cert_status.userid.clone())
                             .set_cipher_suite(self.cert_status.crypto_algo)
                             .add_signing_subkey()
                             .add_subkey(KeyFlags::empty().set_transport_encryption(), None, None)
@@ -221,7 +221,7 @@ impl MyApp {
                 } else {
                     result = Some(
                         CertBuilder::new()
-                            .add_userid(self.cert_status.display_name.clone())
+                            .add_userid(self.cert_status.userid.clone())
                             .set_cipher_suite(self.cert_status.crypto_algo)
                             .set_validity_period(std::time::Duration::from_secs(
                                 self.cert_status.expire_date,
@@ -338,7 +338,6 @@ impl MyApp {
         // gated only by `show_window` (not tied to the click event).
         if self.cert_status.show_window {
             let cert_text = self.cert_status.cert_text.clone();
-            // let rev_text = self.cert_status.rev_text.clone();
             let secret_text = self.cert_status.secret_text.clone();
             egui::containers::Window::new("Certs")
                 .vscroll(true)

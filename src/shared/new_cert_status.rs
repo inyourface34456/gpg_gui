@@ -21,6 +21,7 @@ pub struct CertStatus {
     pub cert_text: String,
     pub secret_text: String,
     pub bin_or_ask: BinOrAsc,
+    pub userid: String,
 }
 
 impl Default for CertStatus {
@@ -38,6 +39,7 @@ impl Default for CertStatus {
             cert_text: String::new(),
             secret_text: String::new(),
             bin_or_ask: BinOrAsc::Asc,
+            userid: String::new(),
         }
     }
 }
