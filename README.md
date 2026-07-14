@@ -12,6 +12,14 @@ You should have a working knowledge of rust and PGP protocall, the ability to co
   - [x] Puiblic keys
   - [x] Private Keys
 - [x] New certifcate
+  - [x] fix all typos (continuious)
+  - [ ] add password show hide
+  - [ ] add password strength indcator
+  - [ ] add presets for expire time
+  - [ ] suport multpial use ids
+  - [ ] Suport for diffrent sign and encrypt algos
+  - [ ] add suport for rfc9580
+  - [ ] per subkey ecpireation
 - [ ] Sign
 - [ ] Verify
 - [ ] Encrypt
