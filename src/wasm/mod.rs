@@ -8,7 +8,6 @@ use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::Parse;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
-use wasm_bindgen::prelude::*;
 use web_sys::window;
 use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, Url};
 

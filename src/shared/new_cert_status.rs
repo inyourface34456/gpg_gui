@@ -41,7 +41,8 @@ pub struct CertStatus {
     pub cert_text: String,
     pub secret_text: String,
     pub bin_or_ask: BinOrAsc,
-    pub userid: String,
+    pub userid: Vec<String>,
+    pub editing_userid: usize,
     pub desired_subkeys: Vec<Subkeys>,
 }
 
@@ -61,7 +62,8 @@ impl Default for CertStatus {
             cert_text: String::new(),
             secret_text: String::new(),
             bin_or_ask: BinOrAsc::Asc,
-            userid: String::new(),
+            userid: vec![String::new()],
+            editing_userid: 0,
             desired_subkeys: vec![
                 Subkeys::Authentcation,
                 Subkeys::Signing,

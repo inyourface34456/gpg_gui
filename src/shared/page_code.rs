@@ -131,11 +131,31 @@ impl MyApp {
                 });
         });
 
+        ui.add_space(10.);
+
         ui.add(MultiSelect::new(
             "a",
             new_cert_status::Subkeys::ALL_SUBKEYS,
             &mut self.cert_status.desired_subkeys,
         ));
+
+        ui.add_space(15.);
+
+        egui::containers::ComboBox::from_label("")
+            .selected_text(format!(
+                "UserID #{} ({})",
+                self.cert_status.editing_userid + 1,
+                self.cert_status.userid[self.cert_status.editing_userid]
+            ))
+            .show_ui(ui, |ui| {
+                for (index, value) in self.cert_status.userid.iter().enumerate() {
+                    ui.selectable_value(
+                        &mut self.cert_status.editing_userid,
+                        index,
+                        format!("UserID #{} ({})", index + 1, value),
+                    );
+                }
+            });
 
         ui.horizontal(|ui| {
             ui.label("Display Name*: ");
@@ -176,9 +196,13 @@ impl MyApp {
             user_id = String::new()
         }
 
-        self.cert_status.userid = user_id.clone();
+        self.cert_status.userid[self.cert_status.editing_userid] = user_id.clone();
 
-        ui.label(format!("User ID: {}", user_id));
+        if ui.button("Add UserID").clicked() {
+            self.cert_status.userid.push(String::new());
+        }
+
+        ui.add_space(10.);
 
         let mut temp = self.cert_status.expire_date.to_string();
 
@@ -192,6 +216,8 @@ impl MyApp {
             ui.checkbox(&mut self.cert_status.never_expires, "Never Expire");
         });
 
+        ui.add_space(5.);
+
         self.cert_status.expire_date = match temp.parse() {
             Ok(num) => num,
             Err(err) => {
@@ -201,6 +227,8 @@ impl MyApp {
                 self.cert_status.expire_date
             }
         };
+
+        ui.add_space(5.);
 
         ui.horizontal(|ui| {
             ui.label("Password*: ");
@@ -236,12 +264,10 @@ impl MyApp {
                 let mut cert_builder;
                 if self.cert_status.never_expires {
                     cert_builder = CertBuilder::new()
-                        .add_userid(self.cert_status.userid.clone())
                         .set_cipher_suite(self.cert_status.crypto_algo)
                         .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 } else {
                     cert_builder = CertBuilder::new()
-                        .add_userid(self.cert_status.userid.clone())
                         .set_cipher_suite(self.cert_status.crypto_algo)
                         .set_validity_period(std::time::Duration::from_secs(
                             self.cert_status.expire_date,
@@ -268,6 +294,10 @@ impl MyApp {
                             cert_builder.add_transport_encryption_subkey()
                         }
                     };
+                }
+
+                for i in self.cert_status.userid.iter() {
+                    cert_builder = cert_builder.add_userid(i.clone())
                 }
 
                 result = Some(cert_builder.generate())
