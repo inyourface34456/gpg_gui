@@ -1258,6 +1258,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "doc-comment"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "780955b8b195a21ab8e4ac6b60dd1dbdcec1dc6c51c0617964b08c81785e12c9"
+
+[[package]]
 name = "document-features"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3920,6 +3926,8 @@ dependencies = [
  "thiserror 2.0.18",
  "twofish",
  "typenum",
+ "win-crypto-ng",
+ "winapi",
  "x25519-dalek",
  "xxhash-rust",
 ]
@@ -4896,6 +4904,19 @@ dependencies = [
  "js-sys",
  "log",
  "web-sys",
+]
+
+[[package]]
+name = "win-crypto-ng"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99abfb435a71e54ab2971d8d8c32f1a7e006cdbf527f71743b1d45b93517bb92"
+dependencies = [
+ "cipher",
+ "doc-comment",
+ "rand_core 0.6.4",
+ "winapi",
+ "zeroize",
 ]
 
 [[package]]

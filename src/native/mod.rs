@@ -7,10 +7,13 @@ use sequoia_openpgp::parse::Parse;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
+#[cfg(target_os = "linux")]
+use std::os::unix::fs::MetadataExt;
+#[cfg(target_os = "windows")]
+use std::os::windows::fs::MetadataExt;
 use std::{
     fs,
     io::{Read, Write},
-    os::unix::fs::MetadataExt,
     process::Command,
 };
 
@@ -144,6 +147,9 @@ impl Storage {
             }
         };
 
+        #[cfg(target_os = "windows")]
+        let mut data: Vec<u8> = Vec::with_capacity(file_metadata.file_size() as usize);
+        #[cfg(target_os = "linux")]
         let mut data: Vec<u8> = Vec::with_capacity(file_metadata.size() as usize);
         match file_handle.read_to_end(&mut data) {
             Ok(bytes) => {

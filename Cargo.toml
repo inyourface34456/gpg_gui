@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "windows")))'.dependencies]
 eframe = { version = "0.31", default-features = false, features = [
     "accesskit",
     "default_fonts",
@@ -37,6 +37,18 @@ sequoia-openpgp = { version = "2.2.0", default-features = false, features = [
   "allow-variable-time-crypto",
 ]}
 
+[target.'cfg(all(not(target_arch = "wasm32"), target_os = "windows"))'.dependencies]
+eframe = { version = "0.31", default-features = false, features = [
+    "accesskit",
+    "default_fonts",
+    "glow",
+    "wayland",
+    "x11",
+    "serde"
+] }
+egui = {version  = "0.31", features = ["serde"]}
+sequoia-openpgp = {version = "2.2.0", default-features = false, features = ["crypto-cng"]}
+
 [dependencies]
 base64 = "0.22.1"
 console_error_panic_hook = "0.1.7"
@@ -52,4 +64,3 @@ strip = true
 panic = "abort"
 lto = true
 codegen-units = 1
-
