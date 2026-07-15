@@ -1,4 +1,5 @@
 use crate::custom_widgets::multi_select::MultiSelect;
+use crate::shared::helpers::user_id_to_componets;
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
@@ -149,11 +150,21 @@ impl MyApp {
             ))
             .show_ui(ui, |ui| {
                 for (index, value) in self.cert_status.userid.iter().enumerate() {
-                    ui.selectable_value(
-                        &mut self.cert_status.editing_userid,
-                        index,
-                        format!("UserID #{} ({})", index + 1, value),
-                    );
+                    if ui
+                        .selectable_value(
+                            &mut self.cert_status.editing_userid,
+                            index,
+                            format!("UserID #{} ({})", index + 1, value),
+                        )
+                        .clicked()
+                    {
+                        let userid_parts = user_id_to_componets(
+                            self.cert_status.userid[self.cert_status.editing_userid].clone(),
+                        );
+                        self.cert_status.display_name = userid_parts.0;
+                        self.cert_status.comment = userid_parts.1;
+                        self.cert_status.email = userid_parts.2;
+                    }
                 }
             });
 
@@ -198,9 +209,27 @@ impl MyApp {
 
         self.cert_status.userid[self.cert_status.editing_userid] = user_id.clone();
 
-        if ui.button("Add UserID").clicked() {
-            self.cert_status.userid.push(String::new());
-        }
+        ui.horizontal(|ui| {
+            if ui.button("Add UserID").clicked() {
+                self.cert_status.userid.push(String::new());
+                self.cert_status.display_name.zeroize();
+                self.cert_status.email.zeroize();
+                self.cert_status.comment.zeroize();
+                self.cert_status.editing_userid = self.cert_status.userid.len() - 1;
+            }
+            if ui.button("Remove Current Userid").clicked() && self.cert_status.userid.len() > 1 {
+                self.cert_status
+                    .userid
+                    .remove(self.cert_status.editing_userid);
+                self.cert_status.editing_userid -= 1;
+                let userid_parts = user_id_to_componets(
+                    self.cert_status.userid[self.cert_status.editing_userid].clone(),
+                );
+                self.cert_status.display_name = userid_parts.0;
+                self.cert_status.comment = userid_parts.1;
+                self.cert_status.email = userid_parts.2;
+            }
+        });
 
         ui.add_space(10.);
 

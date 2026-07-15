@@ -44,3 +44,16 @@ impl MyApp {
         Ok(cert)
     }
 }
+
+pub fn user_id_to_componets(user_id: String) -> (String, String, String) {
+    let userid_com = user_id.split(' ').collect::<Vec<&str>>();
+    if userid_com.len() != 3 {
+        (String::new(), String::new(), String::new())
+    } else {
+        (
+            userid_com[0].to_string(),
+            userid_com[1].replace('(', "").replace(')', ""),
+            userid_com[2].replace('<', "").replace('>', ""),
+        )
+    }
+}
