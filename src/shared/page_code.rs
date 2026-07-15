@@ -263,21 +263,25 @@ impl MyApp {
             ui.label("Password*: ");
             ui.add(
                 egui::TextEdit::singleline(&mut self.cert_status.password)
-                    .password(true)
+                    .password(!self.cert_status.password_vis.0)
                     .hint_text("Password"),
             );
+            ui.checkbox(&mut self.cert_status.password_vis.0, "Show Password");
         });
 
         ui.horizontal(|ui| {
             ui.label("Confirm Password*: ");
             ui.add(
                 egui::TextEdit::singleline(&mut self.cert_status.password2)
-                    .password(true)
-                    .hint_text("Confirm Password"),
+                    .password(!self.cert_status.password_vis.1)
+                    .hint_text("Password"),
             );
+            ui.checkbox(&mut self.cert_status.password_vis.1, "Show Password");
         });
 
-        if self.cert_status.password != self.cert_status.password2 {
+        if !self.cert_status.password2.is_empty()
+            && self.cert_status.password != self.cert_status.password2
+        {
             ui.label(
                 egui::RichText::new("Password does not match!")
                     .color(egui::Color32::from_rgb(255, 0, 0)),

@@ -13,7 +13,7 @@ You should have a working knowledge of rust and PGP protocall, the ability to co
   - [x] Private Keys
 - [x] New certifcate
   - [x] fix all typos (continuious)
-  - [ ] add password show hide
+  - [x] add password show hide
   - [ ] add password strength indcator
   - [ ] add presets for expire time
   - [x] suport multiple user ids
