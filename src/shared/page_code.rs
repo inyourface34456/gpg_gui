@@ -547,5 +547,10 @@ impl MyApp {
             env!("GIT_HASH")
         ));
         ui.label(format!("Target Arch: {}", std::env::consts::ARCH));
+        if ui.link("Github Repo").clicked() {
+            ui.ctx().open_url(egui::OpenUrl::new_tab(
+                "https://github.com/inyourface34456/gpg_gui",
+            ));
+        }
     }
 }
