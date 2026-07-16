@@ -3,6 +3,7 @@ use crate::shared::helpers::user_id_to_componets;
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
+use new_cert_status::ExpireTime;
 use sequoia_openpgp::Packet;
 use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
 use sequoia_openpgp::parse::Parse;
@@ -233,28 +234,128 @@ impl MyApp {
 
         ui.add_space(10.);
 
-        let mut temp = self.cert_status.expire_date.to_string();
+        let mut temp = self.cert_status.to_string();
 
         ui.add_space(1.);
 
         ui.horizontal(|ui| {
-            ui.label("Expire date (in seconds): ");
-            if !self.cert_status.never_expires {
-                ui.text_edit_singleline(&mut temp);
+            ui.label("Expire date: ");
+            ui.add_enabled_ui(
+                !self.cert_status.expire_date.is_none()
+                    || self.cert_status.expire_date == Some(ExpireTime::Custom(1)),
+                |ui| {
+                    egui::ComboBox::from_label("")
+                        .selected_text(format!("{}", temp))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::FiveDays),
+                                "Five Days",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::FiveYears),
+                                "Five Years",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::OneDay),
+                                "One Day",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::OneHour),
+                                "One Hour",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::OneMonth),
+                                "One Month",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::OneWeek),
+                                "One Week",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::OneYear),
+                                "One Year",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::SixHour),
+                                "Six Hours",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::SixMonths),
+                                "Six Months",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::TwoMonths),
+                                "Two Months",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::TwoWeeks),
+                                "Two Weeks",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::TwoYears),
+                                "Two Years",
+                            );
+                            ui.selectable_value(
+                                &mut self.cert_status.expire_date,
+                                Some(ExpireTime::Custom(1)),
+                                "Custom",
+                            );
+                            temp = self.cert_status.to_string();
+                        });
+                },
+            );
+
+            if ui.button("Never Expire").clicked() {
+                if self.cert_status.expire_date.is_none() {
+                    log::info!("expire_date is none");
+                    self.cert_status.expire_date = Some(new_cert_status::ExpireTime::OneDay);
+                    temp = self.cert_status.to_string();
+                } else {
+                    log::info!("expire_date is something");
+                    self.cert_status.expire_date = None;
+                    temp = self.cert_status.to_string();
+                }
             }
-            ui.checkbox(&mut self.cert_status.never_expires, "Never Expire");
         });
+
+        ui.add_enabled_ui(
+            matches!(self.cert_status.expire_date, Some(ExpireTime::Custom(_))),
+            |ui| {
+                ui.text_edit_singleline(&mut temp);
+            },
+        );
 
         ui.add_space(5.);
 
-        self.cert_status.expire_date = match temp.parse() {
+        let temp_2: u64 = match temp.parse() {
             Ok(num) => num,
             Err(err) => {
                 self.err = err.to_string();
                 log::error!("{}", err);
                 self.display_error(ui.ctx(), file!(), line!());
-                self.cert_status.expire_date
+                match self.cert_status.expire_date {
+                    Some(t) => t.into(),
+                    None => 0,
+                }
             }
+        };
+
+        self.cert_status.expire_date = if temp_2 == 0 {
+            None
+        } else {
+            Some(temp_2.into())
         };
 
         ui.add_space(5.);
@@ -295,16 +396,18 @@ impl MyApp {
             let mut result = None;
             if ui.button("Generate Certificate").clicked() {
                 let mut cert_builder;
-                if self.cert_status.never_expires {
+                if self.cert_status.expire_date.is_none() {
                     cert_builder = CertBuilder::new()
                         .set_cipher_suite(self.cert_status.crypto_algo)
                         .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 } else {
+                    let expire_time = match self.cert_status.expire_date {
+                        Some(time) => time.into(),
+                        None => unreachable!(),
+                    };
                     cert_builder = CertBuilder::new()
                         .set_cipher_suite(self.cert_status.crypto_algo)
-                        .set_validity_period(std::time::Duration::from_secs(
-                            self.cert_status.expire_date,
-                        ))
+                        .set_validity_period(std::time::Duration::from_secs(expire_time))
                         .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 }
                 self.cert_status.password.zeroize();
