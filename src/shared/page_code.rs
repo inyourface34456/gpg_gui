@@ -117,47 +117,47 @@ impl MyApp {
             ui.horizontal(|ui| {
                 ui.label("Ecryption Algorithm");
                 egui::ComboBox::from_label(" ")
-                    .selected_text(format!("{:?}", self.cert_status.encrypt_decrypt.0))
+                    .selected_text(format!("{:?}", self.cert_status.encrypt_sign.0))
                     .show_ui(ui, |ui| {
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::Cv25519, "Cv25519");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::Cv25519, "Cv25519");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::Cv448, "Cv448");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::Cv448, "Cv448");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::P256, "NistP256");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::P256, "NistP256");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::P384, "NistP384");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::P384, "NistP384");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::P521, "NistP521");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::P521, "NistP521");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::RSA2k, "RSA2k");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::RSA2k, "RSA2k");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::RSA3k, "RSA3k");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::RSA3k, "RSA3k");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::RSA4k, "RSA4k");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::RSA4k, "RSA4k");
                     });
             });
             ui.horizontal(|ui| {
                 ui.label("Signing Algorithm");
                 egui::ComboBox::from_label("  ")
-                    .selected_text(format!("{:?}", self.cert_status.encrypt_decrypt.1))
+                    .selected_text(format!("{:?}", self.cert_status.encrypt_sign.1))
                     .show_ui(ui, |ui| {
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::Cv25519, "Cv25519");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::Cv25519, "Cv25519");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::Cv448, "Cv448");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::Cv448, "Cv448");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::P256, "NistP256");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::P256, "NistP256");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::P384, "NistP384");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::P384, "NistP384");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::P521, "NistP521");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::P521, "NistP521");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::RSA2k, "RSA2k");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::RSA2k, "RSA2k");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::RSA3k, "RSA3k");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::RSA3k, "RSA3k");
                         #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::RSA4k, "RSA4k");
+                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::RSA4k, "RSA4k");
                     });
             });
         }

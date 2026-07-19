@@ -101,7 +101,8 @@ pub struct CertStatus {
     #[serde(skip_serializing, skip_deserializing)]
     pub crypto_algo: CipherSuite,
     #[serde(skip_serializing, skip_deserializing)]
-    pub encrypt_decrypt: (CipherSuite, CipherSuite),
+    /// 0 is encrypt 1 is sign
+    pub encrypt_sign: (CipherSuite, CipherSuite),
     pub display_name: String,
     pub comment: String,
     pub email: String,
@@ -142,7 +143,7 @@ impl Default for CertStatus {
                 Subkeys::TransportEncryption,
             ],
             diff_algos: false,
-            encrypt_decrypt: (CipherSuite::Cv25519, CipherSuite::Cv25519),
+            encrypt_sign: (CipherSuite::Cv25519, CipherSuite::Cv25519),
         }
     }
 }

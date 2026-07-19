@@ -57,7 +57,7 @@ impl MyApp {
         cert_builder: CertBuilder,
     ) -> pgpResult<(Cert, Signature)> {
         let (cert, revocation) = cert_builder
-            .set_cipher_suite(self.cert_status.encrypt_decrypt.0)
+            .set_cipher_suite(self.cert_status.encrypt_sign.0)
             .generate()?;
 
         let decrypted_cert = cert
@@ -77,19 +77,19 @@ impl MyApp {
             let (flags, suite) = match subkey {
                 Subkeys::Authentcation => (
                     KeyFlags::empty().set_authentication(),
-                    self.cert_status.encrypt_decrypt.0,
+                    self.cert_status.encrypt_sign.1,
                 ),
                 Subkeys::Signing => (
                     KeyFlags::empty().set_signing(),
-                    self.cert_status.encrypt_decrypt.0,
+                    self.cert_status.encrypt_sign.1,
                 ),
                 Subkeys::StorageEncryption => (
                     KeyFlags::empty().set_storage_encryption(),
-                    self.cert_status.encrypt_decrypt.1,
+                    self.cert_status.encrypt_sign.0,
                 ),
                 Subkeys::TransportEncryption => (
                     KeyFlags::empty().set_transport_encryption(),
-                    self.cert_status.encrypt_decrypt.1,
+                    self.cert_status.encrypt_sign.0,
                 ),
             };
 
