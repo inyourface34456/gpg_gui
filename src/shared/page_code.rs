@@ -85,53 +85,82 @@ impl MyApp {
         ui.heading("New Certificate");
         ui.separator();
 
-        ui.horizontal(|ui| {
-            ui.label("Encryption Algorithm");
-            egui::ComboBox::from_label(" ")
-                .selected_text(format!("{:?}", self.cert_status.crypto_algo))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::Cv25519,
-                        "Cv25519",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::Cv448,
-                        "Cv448",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::P256,
-                        "NistP256",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::P384,
-                        "NistP384",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::P521,
-                        "NistP521",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::RSA2k,
-                        "RSA2k",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::RSA3k,
-                        "RSA3k",
-                    );
-                    ui.selectable_value(
-                        &mut self.cert_status.crypto_algo,
-                        CipherSuite::RSA4k,
-                        "RSA4k",
-                    );
-                });
-        });
+        #[rustfmt::skip]
+        ui.checkbox(&mut self.cert_status.diff_algos, "Diffrent algorithm for signing and encrypting");
+
+        if !self.cert_status.diff_algos {
+            ui.horizontal(|ui| {
+                ui.label("Genreal Algorithm");
+                egui::ComboBox::from_label(" ")
+                    .selected_text(format!("{:?}", self.cert_status.crypto_algo))
+                    .show_ui(ui, |ui| {
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::Cv25519, "Cv25519");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::Cv448, "Cv448");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::P256, "NistP256");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::P384, "NistP384");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::P521, "NistP521");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA2k, "RSA2k");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA3k, "RSA3k");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA4k, "RSA4k");
+                    }
+                );
+            });
+        } else {
+            ui.horizontal(|ui| {
+                ui.label("Ecryption Algorithm");
+                egui::ComboBox::from_label(" ")
+                    .selected_text(format!("{:?}", self.cert_status.encrypt_decrypt.0))
+                    .show_ui(ui, |ui| {
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::Cv25519, "Cv25519");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::Cv448, "Cv448");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::P256, "NistP256");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::P384, "NistP384");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::P521, "NistP521");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::RSA2k, "RSA2k");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::RSA3k, "RSA3k");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.0, CipherSuite::RSA4k, "RSA4k");
+                    });
+            });
+            ui.horizontal(|ui| {
+                ui.label("Signing Algorithm");
+                egui::ComboBox::from_label("  ")
+                    .selected_text(format!("{:?}", self.cert_status.encrypt_decrypt.1))
+                    .show_ui(ui, |ui| {
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::Cv25519, "Cv25519");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::Cv448, "Cv448");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::P256, "NistP256");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::P384, "NistP384");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::P521, "NistP521");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::RSA2k, "RSA2k");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::RSA3k, "RSA3k");
+                        #[rustfmt::skip]
+                        ui.selectable_value(&mut self.cert_status.encrypt_decrypt.1, CipherSuite::RSA4k, "RSA4k");
+                    });
+            });
+        }
 
         ui.add_space(10.);
 
@@ -234,7 +263,7 @@ impl MyApp {
 
         ui.add_space(10.);
 
-        let mut temp = self.cert_status.to_string();
+        let mut temp = self.cert_status.expire_date_to_string();
 
         ui.add_space(1.);
 
@@ -247,72 +276,33 @@ impl MyApp {
                     egui::ComboBox::from_label("")
                         .selected_text(format!("{}", temp))
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::FiveDays),
-                                "Five Days",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::FiveYears),
-                                "Five Years",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::OneDay),
-                                "One Day",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::OneHour),
-                                "One Hour",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::OneMonth),
-                                "One Month",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::OneWeek),
-                                "One Week",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::OneYear),
-                                "One Year",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::SixHour),
-                                "Six Hours",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::SixMonths),
-                                "Six Months",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::TwoMonths),
-                                "Two Months",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::TwoWeeks),
-                                "Two Weeks",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::TwoYears),
-                                "Two Years",
-                            );
-                            ui.selectable_value(
-                                &mut self.cert_status.expire_date,
-                                Some(ExpireTime::Custom(1)),
-                                "Custom",
-                            );
-                            temp = self.cert_status.to_string();
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::FiveDays), "Five Days");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::FiveYears), "Five Years");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneDay), "One Day");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneHour), "One Hour");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneMonth), "One Month");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneWeek), "One Week");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneYear), "One Year");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::SixHour), "Six Hours");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::SixMonths), "Six Months");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::TwoMonths), "Two Months");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::TwoWeeks), "Two Weeks");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::TwoYears), "Two Years");
+                            #[rustfmt::skip]
+                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::Custom(1)), "Custom");
+                            temp = self.cert_status.expire_date_to_string();
                         });
                 },
             );
@@ -321,21 +311,18 @@ impl MyApp {
                 if self.cert_status.expire_date.is_none() {
                     log::info!("expire_date is none");
                     self.cert_status.expire_date = Some(new_cert_status::ExpireTime::OneDay);
-                    temp = self.cert_status.to_string();
+                    temp = self.cert_status.expire_date_to_string();
                 } else {
                     log::info!("expire_date is something");
                     self.cert_status.expire_date = None;
-                    temp = self.cert_status.to_string();
+                    temp = self.cert_status.expire_date_to_string();
                 }
             }
         });
 
-        ui.add_enabled_ui(
-            matches!(self.cert_status.expire_date, Some(ExpireTime::Custom(_))),
-            |ui| {
-                ui.text_edit_singleline(&mut temp);
-            },
-        );
+        if matches!(self.cert_status.expire_date, Some(ExpireTime::Custom(_))) {
+            ui.text_edit_singleline(&mut temp);
+        }
 
         ui.add_space(5.);
 
@@ -398,52 +385,38 @@ impl MyApp {
                 let mut cert_builder;
                 if self.cert_status.expire_date.is_none() {
                     cert_builder = CertBuilder::new()
-                        .set_cipher_suite(self.cert_status.crypto_algo)
-                        .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 } else {
                     let expire_time = match self.cert_status.expire_date {
                         Some(time) => time.into(),
                         None => unreachable!(),
                     };
                     cert_builder = CertBuilder::new()
-                        .set_cipher_suite(self.cert_status.crypto_algo)
                         .set_validity_period(std::time::Duration::from_secs(expire_time))
-                        .set_password(Some(self.cert_status.password.clone().into())); // optional: encrypt the secret keys
                 }
-                self.cert_status.password.zeroize();
-                self.cert_status.password2.zeroize();
-                self.cert_status.show_window = true;
 
-                for i in self.cert_status.desired_subkeys.iter() {
-                    cert_builder = match i {
-                        new_cert_status::Subkeys::Authentcation => {
-                            cert_builder.add_authentication_subkey()
-                        }
-                        new_cert_status::Subkeys::Certification => {
-                            cert_builder.add_certification_subkey()
-                        }
-                        new_cert_status::Subkeys::Signing => cert_builder.add_signing_subkey(),
-                        new_cert_status::Subkeys::StorageEncryption => {
-                            cert_builder.add_storage_encryption_subkey()
-                        }
-                        new_cert_status::Subkeys::TransportEncryption => {
-                            cert_builder.add_transport_encryption_subkey()
-                        }
-                    };
-                }
+                cert_builder =
+                    cert_builder.set_password(Some(self.cert_status.password.clone().into()));
 
                 for i in self.cert_status.userid.iter() {
                     cert_builder = cert_builder.add_userid(i.clone())
                 }
 
-                result = Some(cert_builder.generate())
+                if self.cert_status.diff_algos {
+                    result = Some(self.set_signing_and_encryption_type(cert_builder))
+                } else {
+                    cert_builder = cert_builder.set_cipher_suite(self.cert_status.crypto_algo);
+                    result = Some(cert_builder.generate())
+                }
+                self.cert_status.password.zeroize();
+                self.cert_status.password2.zeroize();
+                self.cert_status.show_window = true;
             }
 
             match result {
                 Some(result) => {
                     match result {
                         Ok((cert, rev)) => {
-                            let cert = match cert.insert_packets(vec![Packet::from(rev.clone())]) {
+                            let cert = match cert.insert_packets(vec![Packet::from(rev)]) {
                                 Ok(output) => output.0,
                                 Err(err) => {
                                     self.err = err.to_string();
@@ -542,104 +515,96 @@ impl MyApp {
         if self.cert_status.show_window {
             let cert_text = self.cert_status.cert_text.clone();
             let secret_text = self.cert_status.secret_text.clone();
-            egui::containers::Window::new("Certs")
-                .vscroll(true)
-                .show(ui.ctx(), |ui| {
-                    egui::ScrollArea::horizontal().show(ui, |ui| {
-                        ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the secret key.\n");
-                        ui.label(
-                            egui::RichText::new(format!("Certificate: \n{}", cert_text))
-                                .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
-                        );
-                        ui.label(
-                            egui::RichText::new(format!("Private Key: \n{}", secret_text))
-                                .font(egui::FontId::new(12., egui::FontFamily::Monospace)),
-                        );
-                        ui.horizontal(|ui| {
-                            if ui.button("Dismiss").clicked() {
-                                self.cert_status.show_window = false;
-                            }
-                            egui::containers::ComboBox::from_label("Download Format").selected_text(format!("{:?}", self.cert_status.bin_or_ask)).show_ui(ui, |ui| {
-                                ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Bin, "Binary");
-                                ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Asc, "ASK");
-                            });
-                            if ui.button("Download").clicked() {
-                                if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
-                                    let cert_obj = match self.str_to_cert_obj(&self.cert_status.cert_text.clone()) {
-                                        Ok(cert) => cert,
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                            return;
-                                        }
-                                    };
-                                    let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
-                                        Ok(cert) => cert,
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                            return;
-                                        }
-                                    };
-                                    match platform::write_file("PublicKey", bin_dat) {
-                                        Ok(_) => {},
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                        }
+            egui::containers::Window::new("Certs").vscroll(true).show(ui.ctx(), |ui| {
+                egui::ScrollArea::horizontal().show(ui, |ui| {
+                    ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the secret key.\n");
+                    ui.label(egui::RichText::new(format!("Certificate: \n{}", cert_text)).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
+                    ui.label(egui::RichText::new(format!("Private Key: \n{}", secret_text)).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
+                    ui.horizontal(|ui| {
+                        if ui.button("Dismiss").clicked() {
+                            self.cert_status.show_window = false;
+                        }
+                        egui::containers::ComboBox::from_label("Download Format").selected_text(format!("{:?}", self.cert_status.bin_or_ask)).show_ui(ui, |ui| {
+                            ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Bin, "Binary");
+                            ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Asc, "ASK");
+                        });
+                        if ui.button("Download").clicked() {
+                            if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
+                                let cert_obj = match self.str_to_cert_obj(&self.cert_status.cert_text.clone()) {
+                                    Ok(cert) => cert,
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                        return;
                                     }
+                                };
+                                let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
+                                    Ok(cert) => cert,
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                        return;
+                                    }
+                                };
+                                match platform::write_file("PublicKey", bin_dat) {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                    }
+                                }
 
-                                    let cert_obj = match self.str_to_cert_obj(&self.cert_status.secret_text.clone()) {
-                                        Ok(cert) => cert,
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                            return;
-                                        }
-                                    };
-                                    let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
-                                        Ok(cert) => cert,
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                            return;
-                                        }
-                                    };
-                                    match platform::write_file("SecretKey", bin_dat) {
-                                        Ok(_) => {},
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                        }
+                                let cert_obj = match self.str_to_cert_obj(&self.cert_status.secret_text.clone()) {
+                                    Ok(cert) => cert,
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                        return;
                                     }
-                                } else {
-                                    match platform::write_file("PublicKey.asc", self.cert_status.cert_text.as_bytes().to_vec()) {
-                                        Ok(_) => {},
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                        }
+                                };
+                                let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
+                                    Ok(cert) => cert,
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                        return;
                                     }
-                                    match platform::write_file("SecretKey.asc", self.cert_status.secret_text.as_bytes().to_vec()) {
-                                        Ok(_) => {},
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{}", err);
-                                            self.display_error(ui.ctx(), file!(), line!());
-                                        }
+                                };
+                                match platform::write_file("SecretKey", bin_dat) {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                    }
+                                }
+                            } else {
+                                match platform::write_file("PublicKey.asc", self.cert_status.cert_text.as_bytes().to_vec()) {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
+                                    }
+                                }
+                                match platform::write_file("SecretKey.asc", self.cert_status.secret_text.as_bytes().to_vec()) {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        self.err = err.to_string();
+                                        log::error!("{}", err);
+                                        self.display_error(ui.ctx(), file!(), line!());
                                     }
                                 }
                             }
-                        });
+                        }
                     });
                 });
+            });
         }
     }
 

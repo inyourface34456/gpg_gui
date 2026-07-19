@@ -8,9 +8,7 @@ impl MyApp {
         ui.collapsing("Visuals", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("Dark Mode: ");
-                label.on_hover_text(
-                    "Does not really do anything (according to the docs), buts its here",
-                );
+                label.on_hover_text("Does not really do anything (according to the docs), buts its here");
                 let mut temp = self.style.visuals.dark_mode;
                 ui.checkbox(&mut temp, "");
                 self.style.visuals.dark_mode = temp;
@@ -21,12 +19,11 @@ impl MyApp {
                 label.on_hover_text("Background color for the for pannels (like the color selector)");
                 let mut temp = self.style.visuals.window_fill.to_srgba_unmultiplied();
                 ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                self.style.visuals.window_fill =
-                    Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                self.style.visuals.window_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
             });
 
             ui.horizontal(|ui| {
-                let label  = ui.label("Override text color: ");
+                let label = ui.label("Override text color: ");
                 label.on_hover_text("Text color");
                 let mut temp = self.style.visuals.override_text_color.unwrap_or(Color32::WHITE).to_srgba_unmultiplied();
                 ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -34,207 +31,203 @@ impl MyApp {
             });
 
             ui.collapsing("Widget Style", |ui| {
-                 ui.collapsing("Non-Interactive", |ui| {
-                     ui.horizontal(|ui| {
-                        let label  = ui.label("Backgound fill: ");
+                ui.collapsing("Non-Interactive", |ui| {
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Backgound fill: ");
                         label.on_hover_text("Color of the background");
                         let mut temp = self.style.visuals.widgets.noninteractive.bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
                         self.style.visuals.widgets.noninteractive.bg_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                     });
+                    });
 
-                     ui.horizontal(|ui| {
-                        let label  = ui.label("Weak Backgound fill: ");
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Weak Backgound fill: ");
                         label.on_hover_text("Weaker color of the background");
                         let mut temp = self.style.visuals.widgets.noninteractive.weak_bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
                         self.style.visuals.widgets.noninteractive.weak_bg_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                     });
+                    });
 
-                     ui.collapsing("Background Stroke", |ui| {
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke color: ");
-                             label.on_hover_text("color of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.noninteractive.bg_stroke.color.to_srgba_unmultiplied();
-                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                             self.style.visuals.widgets.noninteractive.bg_stroke.color =
-                                 Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                         });
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke width: ");
-                             label.on_hover_text("width of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.noninteractive.bg_stroke.width;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
-                             self.style.visuals.widgets.noninteractive.bg_stroke.width = temp;
-                         });
-                     });
+                    ui.collapsing("Background Stroke", |ui| {
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke color: ");
+                            label.on_hover_text("color of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.noninteractive.bg_stroke.color.to_srgba_unmultiplied();
+                            ui.color_edit_button_srgba_unmultiplied(&mut temp);
+                            self.style.visuals.widgets.noninteractive.bg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                        });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke width: ");
+                            label.on_hover_text("width of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.noninteractive.bg_stroke.width;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
+                            self.style.visuals.widgets.noninteractive.bg_stroke.width = temp;
+                        });
+                    });
 
-                     ui.collapsing("Forground Stroke", |ui| {
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke color: ");
-                             label.on_hover_text("color of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.noninteractive.fg_stroke.color.to_srgba_unmultiplied();
-                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                             self.style.visuals.widgets.noninteractive.fg_stroke.color =
-                                 Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                         });
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke width: ");
-                             label.on_hover_text("width of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.noninteractive.fg_stroke.width;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
-                             self.style.visuals.widgets.noninteractive.fg_stroke.width = temp;
-                         });
-                     });
-                     ui.collapsing("Window Corner Radius", |ui| {
-                         ui.horizontal(|ui| {
-                             let label = ui.label("NW corner rounding: ");
-                             label.on_hover_text("radius of the northwest corner (i dont know what this actually does, i do not see any effects)");
-                             let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.nw;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.noninteractive.corner_radius.nw = temp;
-                         });
+                    ui.collapsing("Forground Stroke", |ui| {
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke color: ");
+                            label.on_hover_text("color of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.noninteractive.fg_stroke.color.to_srgba_unmultiplied();
+                            ui.color_edit_button_srgba_unmultiplied(&mut temp);
+                            self.style.visuals.widgets.noninteractive.fg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                        });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke width: ");
+                            label.on_hover_text("width of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.noninteractive.fg_stroke.width;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
+                            self.style.visuals.widgets.noninteractive.fg_stroke.width = temp;
+                        });
+                    });
+                    ui.collapsing("Window Corner Radius", |ui| {
+                        ui.horizontal(|ui| {
+                            let label = ui.label("NW corner rounding: ");
+                            label.on_hover_text("radius of the northwest corner (i dont know what this actually does, i do not see any effects)");
+                            let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.nw;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.noninteractive.corner_radius.nw = temp;
+                        });
 
-                         ui.horizontal(|ui| {
-                             let label = ui.label("NE corner rounding: ");
-                             label.on_hover_text("radius of the northeast corner");
-                             let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.ne;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.noninteractive.corner_radius.ne = temp;
-                         });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("NE corner rounding: ");
+                            label.on_hover_text("radius of the northeast corner");
+                            let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.ne;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.noninteractive.corner_radius.ne = temp;
+                        });
 
-                         ui.horizontal(|ui| {
-                             let label = ui.label("SW corner rounding: ");
-                             label.on_hover_text("radius of the southwest corner");
-                             let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.sw;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.noninteractive.corner_radius.sw = temp;
-                         });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("SW corner rounding: ");
+                            label.on_hover_text("radius of the southwest corner");
+                            let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.sw;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.noninteractive.corner_radius.sw = temp;
+                        });
 
-                         ui.horizontal(|ui| {
-                             let label = ui.label("SE corner rounding: ");
-                             label.on_hover_text("radius of the southeast corner");
-                             let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.se;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.noninteractive.corner_radius.se = temp;
-                         });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("SE corner rounding: ");
+                            label.on_hover_text("radius of the southeast corner");
+                            let mut temp = self.style.visuals.widgets.noninteractive.corner_radius.se;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.noninteractive.corner_radius.se = temp;
+                        });
 
-                         if ui.button("Set all to NW corner").clicked() {
-                             self.style.visuals.widgets.noninteractive.corner_radius.ne = self.style.visuals.widgets.noninteractive.corner_radius.nw;
-                             self.style.visuals.widgets.noninteractive.corner_radius.sw = self.style.visuals.widgets.noninteractive.corner_radius.nw;
-                             self.style.visuals.widgets.noninteractive.corner_radius.se = self.style.visuals.widgets.noninteractive.corner_radius.nw;
-                         }
-                     });
-                     ui.horizontal(|ui| {
-                         let label = ui.label("Expansion: ");
-                         label.on_hover_text("make the frame larger");
-                         let mut temp = self.style.visuals.widgets.noninteractive.expansion;
-                         ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
-                         self.style.visuals.widgets.noninteractive.expansion = temp;
-                     });
-                 });
-                 ui.collapsing("Inactive", |ui| {
-                     ui.horizontal(|ui| {
-                        let label  = ui.label("Backgound fill: ");
+                        if ui.button("Set all to NW corner").clicked() {
+                            self.style.visuals.widgets.noninteractive.corner_radius.ne = self.style.visuals.widgets.noninteractive.corner_radius.nw;
+                            self.style.visuals.widgets.noninteractive.corner_radius.sw = self.style.visuals.widgets.noninteractive.corner_radius.nw;
+                            self.style.visuals.widgets.noninteractive.corner_radius.se = self.style.visuals.widgets.noninteractive.corner_radius.nw;
+                        }
+                    });
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Expansion: ");
+                        label.on_hover_text("make the frame larger");
+                        let mut temp = self.style.visuals.widgets.noninteractive.expansion;
+                        ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
+                        self.style.visuals.widgets.noninteractive.expansion = temp;
+                    });
+                });
+                ui.collapsing("Inactive", |ui| {
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Backgound fill: ");
                         label.on_hover_text("Color of the background");
                         let mut temp = self.style.visuals.widgets.inactive.bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
                         self.style.visuals.widgets.inactive.bg_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                     });
+                    });
 
-                     ui.horizontal(|ui| {
-                        let label  = ui.label("Weak Backgound fill: ");
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Weak Backgound fill: ");
                         label.on_hover_text("Weaker color of the background");
                         let mut temp = self.style.visuals.widgets.inactive.weak_bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
                         self.style.visuals.widgets.inactive.weak_bg_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                     });
+                    });
 
-                     ui.collapsing("Background Stroke", |ui| {
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke color: ");
-                             label.on_hover_text("color of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.inactive.bg_stroke.color.to_srgba_unmultiplied();
-                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                             self.style.visuals.widgets.inactive.bg_stroke.color =
-                                 Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                         });
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke width: ");
-                             label.on_hover_text("width of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.inactive.bg_stroke.width;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
-                             self.style.visuals.widgets.inactive.bg_stroke.width = temp;
-                         });
-                     });
+                    ui.collapsing("Background Stroke", |ui| {
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke color: ");
+                            label.on_hover_text("color of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.inactive.bg_stroke.color.to_srgba_unmultiplied();
+                            ui.color_edit_button_srgba_unmultiplied(&mut temp);
+                            self.style.visuals.widgets.inactive.bg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                        });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke width: ");
+                            label.on_hover_text("width of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.inactive.bg_stroke.width;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
+                            self.style.visuals.widgets.inactive.bg_stroke.width = temp;
+                        });
+                    });
 
-                     ui.collapsing("Forground Stroke", |ui| {
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke color: ");
-                             label.on_hover_text("color of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.inactive.fg_stroke.color.to_srgba_unmultiplied();
-                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                             self.style.visuals.widgets.inactive.fg_stroke.color =
-                                 Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
-                         });
-                         ui.horizontal(|ui| {
-                             let label = ui.label("Stroke width: ");
-                             label.on_hover_text("width of the outline on non interactive widgets");
-                             let mut temp = self.style.visuals.widgets.inactive.fg_stroke.width;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
-                             self.style.visuals.widgets.inactive.fg_stroke.width = temp;
-                         });
-                     });
-                     ui.collapsing("Window Corner Radius", |ui| {
-                         ui.horizontal(|ui| {
-                             let label = ui.label("NW corner rounding: ");
-                             label.on_hover_text("radius of the northwest corner (i dont know what this actually does, i do not see any effects)");
-                             let mut temp = self.style.visuals.widgets.inactive.corner_radius.nw;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.inactive.corner_radius.nw = temp;
-                         });
+                    ui.collapsing("Forground Stroke", |ui| {
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke color: ");
+                            label.on_hover_text("color of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.inactive.fg_stroke.color.to_srgba_unmultiplied();
+                            ui.color_edit_button_srgba_unmultiplied(&mut temp);
+                            self.style.visuals.widgets.inactive.fg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                        });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("Stroke width: ");
+                            label.on_hover_text("width of the outline on non interactive widgets");
+                            let mut temp = self.style.visuals.widgets.inactive.fg_stroke.width;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
+                            self.style.visuals.widgets.inactive.fg_stroke.width = temp;
+                        });
+                    });
+                    ui.collapsing("Window Corner Radius", |ui| {
+                        ui.horizontal(|ui| {
+                            let label = ui.label("NW corner rounding: ");
+                            label.on_hover_text("radius of the northwest corner (i dont know what this actually does, i do not see any effects)");
+                            let mut temp = self.style.visuals.widgets.inactive.corner_radius.nw;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.inactive.corner_radius.nw = temp;
+                        });
 
-                         ui.horizontal(|ui| {
-                             let label = ui.label("NE corner rounding: ");
-                             label.on_hover_text("radius of the northeast corner");
-                             let mut temp = self.style.visuals.widgets.inactive.corner_radius.ne;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.inactive.corner_radius.ne = temp;
-                         });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("NE corner rounding: ");
+                            label.on_hover_text("radius of the northeast corner");
+                            let mut temp = self.style.visuals.widgets.inactive.corner_radius.ne;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.inactive.corner_radius.ne = temp;
+                        });
 
-                         ui.horizontal(|ui| {
-                             let label = ui.label("SW corner rounding: ");
-                             label.on_hover_text("radius of the southwest corner");
-                             let mut temp = self.style.visuals.widgets.inactive.corner_radius.sw;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.inactive.corner_radius.sw = temp;
-                         });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("SW corner rounding: ");
+                            label.on_hover_text("radius of the southwest corner");
+                            let mut temp = self.style.visuals.widgets.inactive.corner_radius.sw;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.inactive.corner_radius.sw = temp;
+                        });
 
-                         ui.horizontal(|ui| {
-                             let label = ui.label("SE corner rounding: ");
-                             label.on_hover_text("radius of the southeast corner");
-                             let mut temp = self.style.visuals.widgets.inactive.corner_radius.se;
-                             ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
-                             self.style.visuals.widgets.inactive.corner_radius.se = temp;
-                         });
+                        ui.horizontal(|ui| {
+                            let label = ui.label("SE corner rounding: ");
+                            label.on_hover_text("radius of the southeast corner");
+                            let mut temp = self.style.visuals.widgets.inactive.corner_radius.se;
+                            ui.add(eframe::egui::Slider::new(&mut temp, 0..=100));
+                            self.style.visuals.widgets.inactive.corner_radius.se = temp;
+                        });
 
-                         if ui.button("Set all to NW corner").clicked() {
-                             self.style.visuals.widgets.inactive.corner_radius.ne = self.style.visuals.widgets.inactive.corner_radius.nw;
-                             self.style.visuals.widgets.inactive.corner_radius.sw = self.style.visuals.widgets.inactive.corner_radius.nw;
-                             self.style.visuals.widgets.inactive.corner_radius.se = self.style.visuals.widgets.inactive.corner_radius.nw;
-                         }
-                     });
-                     ui.horizontal(|ui| {
-                         let label = ui.label("Expansion: ");
-                         label.on_hover_text("make the frame larger");
-                         let mut temp = self.style.visuals.widgets.inactive.expansion;
-                         ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
-                         self.style.visuals.widgets.inactive.expansion = temp;
-                     });
-                 });
-                 ui.collapsing("Hovered", |ui| {
+                        if ui.button("Set all to NW corner").clicked() {
+                            self.style.visuals.widgets.inactive.corner_radius.ne = self.style.visuals.widgets.inactive.corner_radius.nw;
+                            self.style.visuals.widgets.inactive.corner_radius.sw = self.style.visuals.widgets.inactive.corner_radius.nw;
+                            self.style.visuals.widgets.inactive.corner_radius.se = self.style.visuals.widgets.inactive.corner_radius.nw;
+                        }
+                    });
                     ui.horizontal(|ui| {
-                        let label  = ui.label("Backgound fill: ");
+                        let label = ui.label("Expansion: ");
+                        label.on_hover_text("make the frame larger");
+                        let mut temp = self.style.visuals.widgets.inactive.expansion;
+                        ui.add(eframe::egui::Slider::new(&mut temp, 0.0..=300.));
+                        self.style.visuals.widgets.inactive.expansion = temp;
+                    });
+                });
+                ui.collapsing("Hovered", |ui| {
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Backgound fill: ");
                         label.on_hover_text("Color of the background");
                         let mut temp = self.style.visuals.widgets.hovered.bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -242,7 +235,7 @@ impl MyApp {
                     });
 
                     ui.horizontal(|ui| {
-                        let label  = ui.label("Weak Backgound fill: ");
+                        let label = ui.label("Weak Backgound fill: ");
                         label.on_hover_text("Weaker color of the background");
                         let mut temp = self.style.visuals.widgets.hovered.weak_bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -255,8 +248,7 @@ impl MyApp {
                             label.on_hover_text("color of the outline on non interactive widgets");
                             let mut temp = self.style.visuals.widgets.hovered.bg_stroke.color.to_srgba_unmultiplied();
                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                            self.style.visuals.widgets.hovered.bg_stroke.color =
-                                Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                            self.style.visuals.widgets.hovered.bg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                         });
                         ui.horizontal(|ui| {
                             let label = ui.label("Stroke width: ");
@@ -273,8 +265,7 @@ impl MyApp {
                             label.on_hover_text("color of the outline on non interactive widgets");
                             let mut temp = self.style.visuals.widgets.hovered.fg_stroke.color.to_srgba_unmultiplied();
                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                            self.style.visuals.widgets.hovered.fg_stroke.color =
-                                Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                            self.style.visuals.widgets.hovered.fg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                         });
                         ui.horizontal(|ui| {
                             let label = ui.label("Stroke width: ");
@@ -331,9 +322,9 @@ impl MyApp {
                         self.style.visuals.widgets.hovered.expansion = temp;
                     });
                 });
-                 ui.collapsing("Active", |ui| {
+                ui.collapsing("Active", |ui| {
                     ui.horizontal(|ui| {
-                        let label  = ui.label("Backgound fill: ");
+                        let label = ui.label("Backgound fill: ");
                         label.on_hover_text("Color of the background");
                         let mut temp = self.style.visuals.widgets.active.bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -341,7 +332,7 @@ impl MyApp {
                     });
 
                     ui.horizontal(|ui| {
-                        let label  = ui.label("Weak Backgound fill: ");
+                        let label = ui.label("Weak Backgound fill: ");
                         label.on_hover_text("Weaker color of the background");
                         let mut temp = self.style.visuals.widgets.active.weak_bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -354,8 +345,7 @@ impl MyApp {
                             label.on_hover_text("color of the outline on non interactive widgets");
                             let mut temp = self.style.visuals.widgets.active.bg_stroke.color.to_srgba_unmultiplied();
                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                            self.style.visuals.widgets.active.bg_stroke.color =
-                                Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                            self.style.visuals.widgets.active.bg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                         });
                         ui.horizontal(|ui| {
                             let label = ui.label("Stroke width: ");
@@ -372,8 +362,7 @@ impl MyApp {
                             label.on_hover_text("color of the outline on non interactive widgets");
                             let mut temp = self.style.visuals.widgets.active.fg_stroke.color.to_srgba_unmultiplied();
                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                            self.style.visuals.widgets.active.fg_stroke.color =
-                                Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                            self.style.visuals.widgets.active.fg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                         });
                         ui.horizontal(|ui| {
                             let label = ui.label("Stroke width: ");
@@ -430,9 +419,9 @@ impl MyApp {
                         self.style.visuals.widgets.active.expansion = temp;
                     });
                 });
-                 ui.collapsing("Open", |ui| {
+                ui.collapsing("Open", |ui| {
                     ui.horizontal(|ui| {
-                        let label  = ui.label("Backgound fill: ");
+                        let label = ui.label("Backgound fill: ");
                         label.on_hover_text("Color of the background");
                         let mut temp = self.style.visuals.widgets.open.bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -440,7 +429,7 @@ impl MyApp {
                     });
 
                     ui.horizontal(|ui| {
-                        let label  = ui.label("Weak Backgound fill: ");
+                        let label = ui.label("Weak Backgound fill: ");
                         label.on_hover_text("Weaker color of the background");
                         let mut temp = self.style.visuals.widgets.open.weak_bg_fill.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
@@ -453,8 +442,7 @@ impl MyApp {
                             label.on_hover_text("color of the outline on non interactive widgets");
                             let mut temp = self.style.visuals.widgets.open.bg_stroke.color.to_srgba_unmultiplied();
                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                            self.style.visuals.widgets.open.bg_stroke.color =
-                                Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                            self.style.visuals.widgets.open.bg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                         });
                         ui.horizontal(|ui| {
                             let label = ui.label("Stroke width: ");
@@ -471,8 +459,7 @@ impl MyApp {
                             label.on_hover_text("color of the outline on non interactive widgets");
                             let mut temp = self.style.visuals.widgets.open.fg_stroke.color.to_srgba_unmultiplied();
                             ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                            self.style.visuals.widgets.open.fg_stroke.color =
-                                Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                            self.style.visuals.widgets.open.fg_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                         });
                         ui.horizontal(|ui| {
                             let label = ui.label("Stroke width: ");
@@ -537,8 +524,7 @@ impl MyApp {
                     label.on_hover_text("Background color of the inside of the checkbox");
                     let mut temp = self.style.visuals.selection.bg_fill.to_srgba_unmultiplied();
                     ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                    self.style.visuals.selection.bg_fill =
-                        Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                    self.style.visuals.selection.bg_fill = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                 });
                 ui.collapsing("Stroke", |ui| {
                     ui.horizontal(|ui| {
@@ -546,8 +532,7 @@ impl MyApp {
                         label.on_hover_text("color of the outline on checkboxes");
                         let mut temp = self.style.visuals.selection.stroke.color.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                        self.style.visuals.selection.stroke.color =
-                            Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                        self.style.visuals.selection.stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                     });
                     ui.horizontal(|ui| {
                         let label = ui.label("Stroke width: ");
@@ -699,7 +684,7 @@ impl MyApp {
             match shadow_response.body_response {
                 Some(body) => {
                     body.on_hover_text_at_pointer("Docs say that this is very similer to CSS drop shadow");
-                },
+                }
                 None => {}
             };
 
@@ -709,8 +694,7 @@ impl MyApp {
                     label.on_hover_text("color of the outline on the window");
                     let mut temp = self.style.visuals.window_stroke.color.to_srgba_unmultiplied();
                     ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                    self.style.visuals.window_stroke.color =
-                        Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                    self.style.visuals.window_stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                 });
 
                 ui.horizontal(|ui| {
@@ -836,8 +820,7 @@ impl MyApp {
                         label.on_hover_text("color of the outline on the text cursor");
                         let mut temp = self.style.visuals.text_cursor.stroke.color.to_srgba_unmultiplied();
                         ui.color_edit_button_srgba_unmultiplied(&mut temp);
-                        self.style.visuals.text_cursor.stroke.color =
-                            Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
+                        self.style.visuals.text_cursor.stroke.color = Color32::from_rgba_unmultiplied(temp[0], temp[1], temp[2], temp[3]);
                     });
 
                     ui.horizontal(|ui| {
@@ -942,12 +925,10 @@ impl MyApp {
                 let label = ui.label("How to display Colors: ");
                 label.on_hover_text("How to display numeric color values (gamma byte is 0-255, linear is 0-1)");
                 let mut temp = self.style.visuals.numeric_color_space;
-                egui::ComboBox::from_label("")
-                    .selected_text(format!("{:?}", temp))
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut temp, eframe::egui::style::NumericColorSpace::GammaByte, "GammaByte");
-                        ui.selectable_value(&mut temp, eframe::egui::style::NumericColorSpace::Linear, "Linear");
-                    });
+                egui::ComboBox::from_label("").selected_text(format!("{:?}", temp)).show_ui(ui, |ui| {
+                    ui.selectable_value(&mut temp, eframe::egui::style::NumericColorSpace::GammaByte, "GammaByte");
+                    ui.selectable_value(&mut temp, eframe::egui::style::NumericColorSpace::Linear, "Linear");
+                });
                 self.style.visuals.numeric_color_space = temp;
             });
         });

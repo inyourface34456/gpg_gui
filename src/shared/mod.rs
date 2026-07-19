@@ -138,12 +138,12 @@ impl eframe::App for MyApp {
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         self.new_cert(ui);
                     });
-                },
+                }
                 Pages::Style => {
                     egui::ScrollArea::vertical().auto_shrink(egui::Vec2b::new(false, false)).show(ui, |ui| {
                         self.style(ui);
                     });
-                },
+                }
                 Pages::Debug => {
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         self.debug(ui);
@@ -153,7 +153,7 @@ impl eframe::App for MyApp {
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         self.sign(ui);
                     });
-                },
+                }
                 Pages::About => {
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         self.about(ui);

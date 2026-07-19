@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
 authors = ["inyourface3445"]
-discription = "A front end for sequioa open pgp on both the web and native"
-readme = "README"
+description = "A front end for sequioa open pgp on both the web and native"
+readme = "README.md"
 repository = "https://github.com/inyourface34456/gpg_gui"
 
 

@@ -15,7 +15,7 @@ You should have a working knowledge of rust and PGP protocall, the ability to co
   - [x] fix all typos (continuious)
   - [x] add password show hide
   - [ ] add password strength indcator
-  - [ ] add presets for expire time
+  - [x] add presets for expire time
   - [x] suport multiple user ids
     - [x] when adding user id, switch to editing that user id and claer all userid related fields
   - [ ] Suport for diffrent sign and encrypt algos

@@ -11,7 +11,6 @@ pub enum BinOrAsc {
 pub enum Subkeys {
     Authentcation,
     TransportEncryption,
-    Certification,
     Signing,
     StorageEncryption,
 }
@@ -91,7 +90,6 @@ impl Into<u64> for ExpireTime {
 impl Subkeys {
     pub const ALL_SUBKEYS: &[Subkeys] = &[
         Subkeys::Authentcation,
-        Subkeys::Certification,
         Subkeys::Signing,
         Subkeys::StorageEncryption,
         Subkeys::TransportEncryption,
@@ -102,6 +100,8 @@ impl Subkeys {
 pub struct CertStatus {
     #[serde(skip_serializing, skip_deserializing)]
     pub crypto_algo: CipherSuite,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub encrypt_decrypt: (CipherSuite, CipherSuite),
     pub display_name: String,
     pub comment: String,
     pub email: String,
@@ -116,12 +116,12 @@ pub struct CertStatus {
     pub editing_userid: usize,
     pub password_vis: (bool, bool),
     pub desired_subkeys: Vec<Subkeys>,
+    pub diff_algos: bool,
 }
 
 impl Default for CertStatus {
     fn default() -> Self {
         Self {
-            // key_flags,
             crypto_algo: CipherSuite::Cv25519,
             display_name: String::new(),
             comment: String::new(),
@@ -141,12 +141,14 @@ impl Default for CertStatus {
                 Subkeys::Signing,
                 Subkeys::TransportEncryption,
             ],
+            diff_algos: false,
+            encrypt_decrypt: (CipherSuite::Cv25519, CipherSuite::Cv25519),
         }
     }
 }
 
 impl CertStatus {
-    pub fn to_string(&self) -> String {
+    pub fn expire_date_to_string(&self) -> String {
         match self.expire_date {
             Some(t) => <ExpireTime as Into<u64>>::into(t).to_string(),
             None => String::from("0"),
