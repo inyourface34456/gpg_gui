@@ -1,5 +1,5 @@
 use crate::custom_widgets::multi_select::MultiSelect;
-use crate::shared::helpers::user_id_to_componets;
+use crate::shared::helpers::{self, user_id_to_componets};
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
@@ -9,6 +9,7 @@ use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::SerializeInto;
 use zeroize::Zeroize;
+use zxcvbn::zxcvbn;
 
 impl MyApp {
     pub fn debug(&mut self, ui: &mut Ui) {
@@ -112,6 +113,7 @@ impl MyApp {
                         ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA4k, "RSA4k");
                     }
                 );
+                self.cert_status.encrypt_sign = (self.cert_status.crypto_algo, self.cert_status.crypto_algo);
             });
         } else {
             ui.horizontal(|ui| {
@@ -367,6 +369,35 @@ impl MyApp {
             ui.checkbox(&mut self.cert_status.password_vis.1, "Show Password");
         });
 
+        let score = zxcvbn(
+            &self.cert_status.password,
+            &[
+                &self.cert_status.comment,
+                &self.cert_status.email,
+                &self.cert_status.display_name,
+            ],
+        );
+        let (label, color) = helpers::score_info(score.score());
+
+        ui.horizontal(|ui| {
+            ui.label("Password Strength");
+            let bar = egui::ProgressBar::new(score.score() as u8 as f32 / 4.)
+                .show_percentage()
+                .fill(color)
+                .desired_width(200.);
+            ui.add(bar);
+            ui.colored_label(color, label);
+        });
+
+        if let Some(feedback) = score.feedback() {
+            if let Some(warning) = feedback.warning() {
+                ui.label(format!("Warning: {}", warning));
+            }
+            for sugestion in feedback.suggestions() {
+                ui.label(format!("Suggestion: {}", sugestion));
+            }
+        }
+
         if !self.cert_status.password2.is_empty()
             && self.cert_status.password != self.cert_status.password2
         {
@@ -401,12 +432,7 @@ impl MyApp {
                     cert_builder = cert_builder.add_userid(i.clone())
                 }
 
-                if self.cert_status.diff_algos {
-                    result = Some(self.set_signing_and_encryption_type(cert_builder))
-                } else {
-                    cert_builder = cert_builder.set_cipher_suite(self.cert_status.crypto_algo);
-                    result = Some(cert_builder.generate())
-                }
+                result = Some(self.set_signing_and_encryption_type(cert_builder));
                 self.cert_status.password.zeroize();
                 self.cert_status.password2.zeroize();
                 self.cert_status.show_window = true;

@@ -1,5 +1,6 @@
 use crate::MyApp;
 use crate::shared::new_cert_status::Subkeys;
+use egui::Color32;
 use egui::Ui;
 use sequoia_openpgp::Cert;
 use sequoia_openpgp::Result as pgpResult;
@@ -135,5 +136,16 @@ pub fn user_id_to_componets(user_id: String) -> (String, String, String) {
             userid_com[2].replace('<', "").replace('>', ""),
         ),
         _ => (String::new(), String::new(), String::new()),
+    }
+}
+
+pub fn score_info(score: zxcvbn::Score) -> (&'static str, egui::Color32) {
+    match score {
+        zxcvbn::Score::Zero => ("Very Weak", Color32::from_rgb(220, 50, 50)),
+        zxcvbn::Score::One => ("Weak", Color32::from_rgb(230, 126, 34)),
+        zxcvbn::Score::Two => ("Fair", Color32::from_rgb(241, 196, 15)),
+        zxcvbn::Score::Three => ("Good", Color32::from_rgb(46, 204, 113)),
+        zxcvbn::Score::Four => ("Strong", Color32::from_rgb(39, 174, 96)),
+        _ => unreachable!(),
     }
 }
