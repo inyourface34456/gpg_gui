@@ -369,14 +369,17 @@ impl MyApp {
             ui.checkbox(&mut self.cert_status.password_vis.1, "Show Password");
         });
 
-        let score = zxcvbn(
+        let score = match zxcvbn(
             &self.cert_status.password,
             &[
                 &self.cert_status.comment,
                 &self.cert_status.email,
                 &self.cert_status.display_name,
             ],
-        );
+        ) {
+            Ok(score) => score,
+            Err(_) => zxcvbn("a", &[]).expect("No idea how this can fail"),
+        };
         let (label, color) = helpers::score_info(score.score());
 
         ui.horizontal(|ui| {

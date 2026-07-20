@@ -139,13 +139,13 @@ pub fn user_id_to_componets(user_id: String) -> (String, String, String) {
     }
 }
 
-pub fn score_info(score: zxcvbn::Score) -> (&'static str, egui::Color32) {
+pub fn score_info(score: u8) -> (&'static str, egui::Color32) {
     match score {
-        zxcvbn::Score::Zero => ("Very Weak", Color32::from_rgb(220, 50, 50)),
-        zxcvbn::Score::One => ("Weak", Color32::from_rgb(230, 126, 34)),
-        zxcvbn::Score::Two => ("Fair", Color32::from_rgb(241, 196, 15)),
-        zxcvbn::Score::Three => ("Good", Color32::from_rgb(46, 204, 113)),
-        zxcvbn::Score::Four => ("Strong", Color32::from_rgb(39, 174, 96)),
+        0 => ("Very Weak", Color32::from_rgb(220, 50, 50)),
+        1 => ("Weak", Color32::from_rgb(230, 126, 34)),
+        2 => ("Fair", Color32::from_rgb(241, 196, 15)),
+        3 => ("Good", Color32::from_rgb(46, 204, 113)),
+        4 => ("Strong", Color32::from_rgb(39, 174, 96)),
         _ => unreachable!(),
     }
 }

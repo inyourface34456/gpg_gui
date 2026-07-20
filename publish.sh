@@ -10,6 +10,7 @@ mkdir -p "$CACHE_DIR"
 rm -rf "$CACHE_DIR/target"
 rm -rf "$CACHE_DIR/.zed"
 mv target "$CACHE_DIR/"
+mkdir .zed -p
 mv .zed "$CACHE_DIR/"
 
 rm -rf /tmp/gh-pages-dist
