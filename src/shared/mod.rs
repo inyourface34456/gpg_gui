@@ -1,8 +1,8 @@
-mod helpers;
-mod new_cert_status;
-mod page_code;
-mod pages;
-mod style_page_code;
+pub mod helpers;
+pub mod new_cert_status;
+pub mod page_code;
+pub mod pages;
+pub mod style_page_code;
 
 use crate::platform::Storage;
 use eframe::egui;

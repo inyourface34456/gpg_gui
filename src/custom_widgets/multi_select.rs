@@ -26,7 +26,7 @@ impl<'a, T> Widget for MultiSelect<'a, T>
 where
     T: std::cmp::PartialEq,
     T: Clone,
-    T: std::fmt::Debug,
+    T: std::fmt::Display,
 {
     fn ui(self, ui: &mut Ui) -> Response {
         let id = ui.make_persistent_id(self.id_salt);
@@ -49,7 +49,7 @@ where
                         let r = ui
                             .group(|ui| {
                                 ui.horizontal(|ui| {
-                                    ui.label(format!("{:?}", item));
+                                    ui.label(format!("{}", item));
                                     if ui.small_button("x").clicked() {
                                         to_remove = Some(item.clone());
                                     }
@@ -73,7 +73,7 @@ where
             ui.horizontal_wrapped(|ui| {
                 for item in self.options {
                     let is_selected = self.selected.contains(item);
-                    let r = ui.selectable_label(is_selected, format!("{:?}", item));
+                    let r = ui.selectable_label(is_selected, format!("{}", item));
                     if r.clicked() {
                         if is_selected {
                             for (index, item_) in self.selected.iter().enumerate() {

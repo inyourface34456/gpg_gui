@@ -1,16 +1,9 @@
 use crate::MyApp;
-use crate::shared::new_cert_status::Subkeys;
 use egui::Color32;
 use egui::Ui;
 use sequoia_openpgp::Cert;
-use sequoia_openpgp::Result as pgpResult;
-use sequoia_openpgp::cert::CertBuilder;
-use sequoia_openpgp::cert::prelude::*;
-use sequoia_openpgp::packet::Signature;
 use sequoia_openpgp::parse::Parse;
-use sequoia_openpgp::policy::StandardPolicy;
 use sequoia_openpgp::serialize::Marshal;
-use sequoia_openpgp::types::KeyFlags;
 
 impl MyApp {
     // pub fn cert_obj_to_str(&mut self, ui: &Ui, cert: Cert) -> Result<String, String> {
@@ -51,73 +44,6 @@ impl MyApp {
     pub fn str_to_cert_obj(&mut self, input: &str) -> Result<Cert, String> {
         let cert = Cert::from_bytes(input.as_bytes()).map_err(|err| err.to_string())?;
         Ok(cert)
-    }
-
-    pub fn set_signing_and_encryption_type(
-        &self,
-        cert_builder: CertBuilder,
-    ) -> pgpResult<(Cert, Signature)> {
-        let (cert, revocation) = cert_builder
-            .set_cipher_suite(self.cert_status.encrypt_sign.0)
-            .generate()?;
-
-        let decrypted_cert = cert
-            .primary_key()
-            .key()
-            .clone()
-            .parts_into_secret()?
-            .decrypt_secret(&self.cert_status.password.clone().into())?;
-
-        let mut working_cert = cert.insert_packets(decrypted_cert)?.0;
-
-        let policy = StandardPolicy::new();
-
-        // 2. Attach one subkey per requested capability, each with the
-        //    appropriate algorithm.
-        for subkey in self.cert_status.desired_subkeys.iter() {
-            let (flags, suite) = match subkey {
-                Subkeys::Authentcation => (
-                    KeyFlags::empty().set_authentication(),
-                    self.cert_status.encrypt_sign.1,
-                ),
-                Subkeys::Signing => (
-                    KeyFlags::empty().set_signing(),
-                    self.cert_status.encrypt_sign.1,
-                ),
-                Subkeys::StorageEncryption => (
-                    KeyFlags::empty().set_storage_encryption(),
-                    self.cert_status.encrypt_sign.0,
-                ),
-                Subkeys::TransportEncryption => (
-                    KeyFlags::empty().set_transport_encryption(),
-                    self.cert_status.encrypt_sign.0,
-                ),
-            };
-
-            let new_cert = {
-                let vc = working_cert.with_policy(&policy, None)?;
-                KeyBuilder::new(flags)
-                    .set_cipher_suite(suite)
-                    .set_password(Some(self.cert_status.password.clone().into()))
-                    .subkey(vc)?
-                    .attach_cert()?
-            };
-
-            working_cert = new_cert;
-        }
-
-        let re_encrypted_primary = working_cert
-            .primary_key()
-            .key()
-            .clone()
-            .parts_into_secret()?
-            .encrypt_secret(&self.cert_status.password.clone().into())?;
-
-        // I hate this, it feels like im leaking the decrypted cert,
-        // but sequioa says that this should not happen
-        let cert = working_cert.insert_packets(re_encrypted_primary)?.0;
-
-        Ok((cert, revocation))
     }
 }
 

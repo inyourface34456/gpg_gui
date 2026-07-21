@@ -7,12 +7,23 @@ pub enum BinOrAsc {
     Asc,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Subkeys {
-    Authentcation,
-    TransportEncryption,
-    Signing,
-    StorageEncryption,
+    Authentcation(Option<ExpireTime>),
+    TransportEncryption(Option<ExpireTime>),
+    Signing(Option<ExpireTime>),
+    StorageEncryption(Option<ExpireTime>),
+}
+
+impl std::fmt::Display for Subkeys {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Authentcation(_) => write!(f, "Authentcation"),
+            Self::Signing(_) => write!(f, "Signing"),
+            Self::StorageEncryption(_) => write!(f, "Storage Encryption"),
+            Self::TransportEncryption(_) => write!(f, "Transport Encryption"),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Copy, Clone)]
@@ -45,6 +56,10 @@ impl ExpireTime {
     const TWO_MONTHS: u64 = 60 * 60 * 24 * 27 * 2;
     const TWO_WEEKS: u64 = 60 * 60 * 24 * 7 * 2;
     const TWO_YEARS: u64 = 60 * 60 * 24 * 365 * 2;
+
+    pub fn to_string(&self) -> String {
+        format!("{}", Into::<u64>::into(*self))
+    }
 }
 
 impl From<u64> for ExpireTime {
@@ -89,11 +104,17 @@ impl Into<u64> for ExpireTime {
 
 impl Subkeys {
     pub const ALL_SUBKEYS: &[Subkeys] = &[
-        Subkeys::Authentcation,
-        Subkeys::Signing,
-        Subkeys::StorageEncryption,
-        Subkeys::TransportEncryption,
+        Subkeys::Authentcation(Some(ExpireTime::OneDay)),
+        Subkeys::Signing(Some(ExpireTime::OneDay)),
+        Subkeys::StorageEncryption(Some(ExpireTime::OneDay)),
+        Subkeys::TransportEncryption(Some(ExpireTime::OneDay)),
     ];
+}
+
+impl Into<std::time::Duration> for ExpireTime {
+    fn into(self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.into())
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -138,21 +159,12 @@ impl Default for CertStatus {
             editing_userid: 0,
             password_vis: (false, false),
             desired_subkeys: vec![
-                Subkeys::Authentcation,
-                Subkeys::Signing,
-                Subkeys::TransportEncryption,
+                Subkeys::Authentcation(Some(ExpireTime::OneDay)),
+                Subkeys::Signing(Some(ExpireTime::OneDay)),
+                Subkeys::TransportEncryption(Some(ExpireTime::OneDay)),
             ],
             diff_algos: false,
             encrypt_sign: (CipherSuite::Cv25519, CipherSuite::Cv25519),
-        }
-    }
-}
-
-impl CertStatus {
-    pub fn expire_date_to_string(&self) -> String {
-        match self.expire_date {
-            Some(t) => <ExpireTime as Into<u64>>::into(t).to_string(),
-            None => String::from("0"),
         }
     }
 }

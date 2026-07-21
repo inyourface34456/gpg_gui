@@ -1,13 +1,15 @@
+use crate::custom_widgets::expire_time_selector::ExpireTimeSelector;
 use crate::custom_widgets::multi_select::MultiSelect;
 use crate::shared::helpers::{self, user_id_to_componets};
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
-use new_cert_status::ExpireTime;
+use new_cert_status::Subkeys;
 use sequoia_openpgp::Packet;
 use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::SerializeInto;
+use sequoia_openpgp::types::KeyFlags;
 use zeroize::Zeroize;
 use zxcvbn::zxcvbn;
 
@@ -263,89 +265,12 @@ impl MyApp {
             }
         });
 
-        ui.add_space(10.);
-
-        let mut temp = self.cert_status.expire_date_to_string();
-
-        ui.add_space(1.);
-
-        ui.horizontal(|ui| {
-            ui.label("Expire date: ");
-            ui.add_enabled_ui(
-                !self.cert_status.expire_date.is_none()
-                    || self.cert_status.expire_date == Some(ExpireTime::Custom(1)),
-                |ui| {
-                    egui::ComboBox::from_label("")
-                        .selected_text(format!("{}", temp))
-                        .show_ui(ui, |ui| {
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::FiveDays), "Five Days");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::FiveYears), "Five Years");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneDay), "One Day");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneHour), "One Hour");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneMonth), "One Month");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneWeek), "One Week");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::OneYear), "One Year");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::SixHour), "Six Hours");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::SixMonths), "Six Months");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::TwoMonths), "Two Months");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::TwoWeeks), "Two Weeks");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::TwoYears), "Two Years");
-                            #[rustfmt::skip]
-                            ui.selectable_value(&mut self.cert_status.expire_date, Some(ExpireTime::Custom(1)), "Custom");
-                            temp = self.cert_status.expire_date_to_string();
-                        });
-                },
-            );
-
-            if ui.button("Never Expire").clicked() {
-                if self.cert_status.expire_date.is_none() {
-                    log::info!("expire_date is none");
-                    self.cert_status.expire_date = Some(new_cert_status::ExpireTime::OneDay);
-                    temp = self.cert_status.expire_date_to_string();
-                } else {
-                    log::info!("expire_date is something");
-                    self.cert_status.expire_date = None;
-                    temp = self.cert_status.expire_date_to_string();
-                }
-            }
-        });
-
-        if matches!(self.cert_status.expire_date, Some(ExpireTime::Custom(_))) {
-            ui.text_edit_singleline(&mut temp);
-        }
-
         ui.add_space(5.);
 
-        let temp_2: u64 = match temp.parse() {
-            Ok(num) => num,
-            Err(err) => {
-                self.err = err.to_string();
-                log::error!("{}", err);
-                self.display_error(ui.ctx(), file!(), line!());
-                match self.cert_status.expire_date {
-                    Some(t) => t.into(),
-                    None => 0,
-                }
-            }
-        };
-
-        self.cert_status.expire_date = if temp_2 == 0 {
-            None
-        } else {
-            Some(temp_2.into())
-        };
+        ui.add(ExpireTimeSelector::new(
+            "test a",
+            &mut self.cert_status.expire_date,
+        ));
 
         ui.add_space(5.);
 
@@ -435,7 +360,35 @@ impl MyApp {
                     cert_builder = cert_builder.add_userid(i.clone())
                 }
 
-                result = Some(self.set_signing_and_encryption_type(cert_builder));
+                let (sign, encrypt) = self.cert_status.encrypt_sign;
+                cert_builder = cert_builder.set_cipher_suite(sign);
+
+                for subkey_type in self.cert_status.desired_subkeys.iter() {
+                    cert_builder = match subkey_type {
+                        Subkeys::Authentcation(v) => cert_builder.add_subkey(
+                            KeyFlags::empty().set_authentication(),
+                            v.map(Into::into),
+                            Some(sign),
+                        ),
+                        Subkeys::Signing(v) => cert_builder.add_subkey(
+                            KeyFlags::empty().set_signing(),
+                            v.map(Into::into),
+                            Some(sign),
+                        ),
+                        Subkeys::StorageEncryption(v) => cert_builder.add_subkey(
+                            KeyFlags::empty().set_storage_encryption(),
+                            v.map(Into::into),
+                            Some(encrypt),
+                        ),
+                        Subkeys::TransportEncryption(v) => cert_builder.add_subkey(
+                            KeyFlags::empty().set_transport_encryption(),
+                            v.map(Into::into),
+                            Some(encrypt),
+                        ),
+                    };
+                }
+
+                result = Some(cert_builder.generate());
                 self.cert_status.password.zeroize();
                 self.cert_status.password2.zeroize();
                 self.cert_status.show_window = true;
