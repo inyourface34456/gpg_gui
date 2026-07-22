@@ -45,9 +45,7 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
         }
     }
 
-    Ok((
-        certs, priv_certs, // vec![]
-    ))
+    Ok((certs, priv_certs))
 }
 
 impl MyApp {
@@ -82,29 +80,6 @@ pub struct Storage {
 impl Storage {
     const FILENAME: &'static str = "data";
 
-    // // yes none of these cannot technicly fail, but i want parody between native and wasm code
-    // pub fn set_item(&mut self, key: &str, value: &str) -> Result<(), String> {
-    //     match self.storage.insert(key.into(), value.into()) {
-    //         Some(_) => Ok(()),
-    //         None => Ok(()),
-    //     }
-    // }
-
-    // pub fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
-    //     match self.storage.get(&key.to_string()) {
-    //         Some(item) => Ok(Some(item.clone())),
-    //         None => Ok(None),
-    //     }
-    // }
-
-    // pub fn remove_item(&mut self, key: &str) -> Result<(), String> {
-    //     match self.storage.remove(&key.to_string()) {
-    //         Some(_) => Ok(()),
-    //         None => Err(String::from("item does not exist")),
-    //     }
-    // }
-
-    // layout: MyApp (no need to re init storage struct)
     pub fn write(&self, data: &MyApp) {
         let data: Vec<u8> = match to_vec(&data) {
             Ok(data) => data,

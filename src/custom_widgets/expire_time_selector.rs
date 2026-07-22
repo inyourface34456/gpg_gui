@@ -11,12 +11,6 @@ impl<'a> ExpireTimeSelector<'a> {
     pub fn new(id_salt: &'a str, expire: &'a mut Option<ExpireTime>) -> Self {
         Self { id_salt, expire }
     }
-
-    // /// Builder-style config, matching egui's own conventions.
-    // pub fn max_selected(mut self, max: usize) -> Self {
-    //     self.max_selected = max;
-    //     self
-    // }
 }
 
 impl<'a> Widget for ExpireTimeSelector<'a> {

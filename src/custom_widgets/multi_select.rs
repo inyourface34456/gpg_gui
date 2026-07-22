@@ -14,12 +14,6 @@ impl<'a, T> MultiSelect<'a, T> {
             id_salt,
         }
     }
-
-    // /// Builder-style config, matching egui's own conventions.
-    // pub fn max_selected(mut self, max: usize) -> Self {
-    //     self.max_selected = max;
-    //     self
-    // }
 }
 
 impl<'a, T> Widget for MultiSelect<'a, T>

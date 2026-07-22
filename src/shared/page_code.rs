@@ -4,9 +4,9 @@ use crate::shared::helpers::{self, user_id_to_componets};
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
 use egui::Ui;
-use new_cert_status::Subkeys;
+use new_cert_status::{CipherSuite, Subkeys};
 use sequoia_openpgp::Packet;
-use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite};
+use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite as Cs};
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::SerializeInto;
 use sequoia_openpgp::types::KeyFlags;
@@ -246,9 +246,9 @@ impl MyApp {
         ui.horizontal(|ui| {
             if ui.button("Add UserID").clicked() {
                 self.cert_status.userid.push(String::new());
-                self.cert_status.display_name.zeroize();
-                self.cert_status.email.zeroize();
-                self.cert_status.comment.zeroize();
+                self.cert_status.display_name = String::new();
+                self.cert_status.email = String::new();
+                self.cert_status.comment = String::new();
                 self.cert_status.editing_userid = self.cert_status.userid.len() - 1;
             }
             if ui.button("Remove Current Userid").clicked() && self.cert_status.userid.len() > 1 {
@@ -271,6 +271,10 @@ impl MyApp {
             "test a",
             &mut self.cert_status.expire_date,
         ));
+
+        for i in self.cert_status.desired_subkeys.iter_mut() {
+            i.set_expire(self.cert_status.expire_date);
+        }
 
         ui.add_space(5.);
 
@@ -360,30 +364,33 @@ impl MyApp {
                     cert_builder = cert_builder.add_userid(i.clone())
                 }
 
-                let (sign, encrypt) = self.cert_status.encrypt_sign;
-                cert_builder = cert_builder.set_cipher_suite(sign);
+                let (sign, encrypt): (Cs, Cs) = (
+                    self.cert_status.encrypt_sign.0.into(),
+                    self.cert_status.encrypt_sign.1.into(),
+                );
+                cert_builder = cert_builder.set_cipher_suite(sign.into());
 
                 for subkey_type in self.cert_status.desired_subkeys.iter() {
                     cert_builder = match subkey_type {
                         Subkeys::Authentcation(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_authentication(),
                             v.map(Into::into),
-                            Some(sign),
+                            Some(sign.into()),
                         ),
                         Subkeys::Signing(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_signing(),
                             v.map(Into::into),
-                            Some(sign),
+                            Some(sign.into()),
                         ),
                         Subkeys::StorageEncryption(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_storage_encryption(),
                             v.map(Into::into),
-                            Some(encrypt),
+                            Some(encrypt.into()),
                         ),
                         Subkeys::TransportEncryption(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_transport_encryption(),
                             v.map(Into::into),
-                            Some(encrypt),
+                            Some(encrypt.into()),
                         ),
                     };
                 }
@@ -395,99 +402,95 @@ impl MyApp {
             }
 
             match result {
-                Some(result) => {
-                    match result {
-                        Ok((cert, rev)) => {
-                            let cert = match cert.insert_packets(vec![Packet::from(rev)]) {
-                                Ok(output) => output.0,
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    self.display_error(ui.ctx(), file!(), line!());
-                                    return;
-                                }
-                            };
+                Some(result) => match result {
+                    Ok((cert, rev)) => {
+                        let cert = match cert.insert_packets(vec![Packet::from(rev)]) {
+                            Ok(output) => output.0,
+                            Err(err) => {
+                                self.err = err.to_string();
+                                log::error!("{}", err);
+                                self.display_error(ui.ctx(), file!(), line!());
+                                return;
+                            }
+                        };
 
-                            let armored: Vec<u8> = match cert.armored().to_vec() {
-                                Ok(cert) => cert,
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    self.display_error(ui.ctx(), file!(), line!());
-                                    vec![]
-                                }
-                            };
-                            self.cert_status.cert_text = match String::from_utf8(armored) {
-                                Ok(output) => output,
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    self.display_error(ui.ctx(), file!(), line!());
-                                    String::new()
-                                }
-                            };
+                        let armored: Vec<u8> = match cert.armored().to_vec() {
+                            Ok(cert) => cert,
+                            Err(err) => {
+                                self.err = err.to_string();
+                                log::error!("{}", err);
+                                self.display_error(ui.ctx(), file!(), line!());
+                                vec![]
+                            }
+                        };
+                        self.cert_status.cert_text = match String::from_utf8(armored) {
+                            Ok(output) => output,
+                            Err(err) => {
+                                self.err = err.to_string();
+                                log::error!("{}", err);
+                                self.display_error(ui.ctx(), file!(), line!());
+                                String::new()
+                            }
+                        };
 
-                            match CertParser::from_reader(self.cert_status.cert_text.as_bytes())
-                                .map_err(|e| e.to_string())
-                            {
-                                Ok(cert) => {
-                                    for cert in cert {
-                                        self.certs.push(match cert {
-                                            Ok(cert) => cert,
-                                            Err(err) => {
-                                                self.err = err.to_string();
-                                                log::error!("{}", err);
-                                                break;
-                                            }
-                                        });
-                                    }
-                                }
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    // self.display_error(ui.ctx(), file!(), line!());
+                        match CertParser::from_reader(self.cert_status.cert_text.as_bytes())
+                            .map_err(|e| e.to_string())
+                        {
+                            Ok(cert) => {
+                                for cert in cert {
+                                    self.certs.push(match cert {
+                                        Ok(cert) => cert,
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            break;
+                                        }
+                                    });
                                 }
                             }
-
-                            self.cert_status.secret_text = match cert.as_tsk().armored().to_vec() {
-                                Ok(bytes) => String::from_utf8(bytes).unwrap_or_default(),
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    self.display_error(ui.ctx(), file!(), line!());
-                                    String::new()
-                                }
-                            };
-
-                            match CertParser::from_reader(self.cert_status.secret_text.as_bytes())
-                                .map_err(|e| e.to_string())
-                            {
-                                Ok(cert) => {
-                                    for cert in cert {
-                                        self.priv_certs.push(match cert {
-                                            Ok(cert) => cert,
-                                            Err(err) => {
-                                                self.err = err.to_string();
-                                                log::error!("{}", err);
-                                                break;
-                                            }
-                                        });
-                                    }
-                                }
-                                Err(err) => {
-                                    self.err = err.to_string();
-                                    log::error!("{}", err);
-                                    // self.display_error(ui.ctx(), file!(), line!());
-                                }
+                            Err(err) => {
+                                self.err = err.to_string();
+                                log::error!("{}", err);
                             }
                         }
-                        Err(err) => {
-                            self.err = err.to_string();
-                            log::error!("{}", err);
-                            self.display_error(ui.ctx(), file!(), line!());
+
+                        self.cert_status.secret_text = match cert.as_tsk().armored().to_vec() {
+                            Ok(bytes) => String::from_utf8(bytes).unwrap_or_default(),
+                            Err(err) => {
+                                self.err = err.to_string();
+                                log::error!("{}", err);
+                                self.display_error(ui.ctx(), file!(), line!());
+                                String::new()
+                            }
+                        };
+
+                        match CertParser::from_reader(self.cert_status.secret_text.as_bytes())
+                            .map_err(|e| e.to_string())
+                        {
+                            Ok(cert) => {
+                                for cert in cert {
+                                    self.priv_certs.push(match cert {
+                                        Ok(cert) => cert,
+                                        Err(err) => {
+                                            self.err = err.to_string();
+                                            log::error!("{}", err);
+                                            break;
+                                        }
+                                    });
+                                }
+                            }
+                            Err(err) => {
+                                self.err = err.to_string();
+                                log::error!("{}", err);
+                            }
                         }
                     }
-                }
+                    Err(err) => {
+                        self.err = err.to_string();
+                        log::error!("{}", err);
+                        self.display_error(ui.ctx(), file!(), line!());
+                    }
+                },
                 None => {}
             }
         }
@@ -499,7 +502,7 @@ impl MyApp {
             let secret_text = self.cert_status.secret_text.clone();
             egui::containers::Window::new("Certs").vscroll(true).show(ui.ctx(), |ui| {
                 egui::ScrollArea::horizontal().show(ui, |ui| {
-                    ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the secret key.\n");
+                    ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the private cert.\n");
                     ui.label(egui::RichText::new(format!("Certificate: \n{}", cert_text)).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
                     ui.label(egui::RichText::new(format!("Private Key: \n{}", secret_text)).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
                     ui.horizontal(|ui| {
@@ -601,6 +604,7 @@ impl MyApp {
             env!("GIT_HASH")
         ));
         ui.label(format!("Target Arch: {}", std::env::consts::ARCH));
+        ui.label(format!("Target Os: {}", std::env::consts::OS));
         if ui.link("Github Repo").clicked() {
             ui.ctx().open_url(egui::OpenUrl::new_tab(
                 "https://github.com/inyourface34456/gpg_gui",

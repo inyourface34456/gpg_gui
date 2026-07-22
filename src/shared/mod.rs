@@ -7,12 +7,10 @@ pub mod style_page_code;
 use crate::platform::Storage;
 use eframe::egui;
 use egui::Context;
-use new_cert_status::CertStatus;
+use new_cert_status::{CertStatus, CipherSuite};
 use pages::Pages;
 use sequoia_openpgp::Cert;
-use sequoia_openpgp::cert::CipherSuite;
 use serde::{Deserialize, Serialize};
-use zeroize::Zeroize;
 
 #[derive(Serialize, Deserialize)]
 pub struct MyApp {
@@ -101,11 +99,6 @@ impl eframe::App for MyApp {
                     ui.selectable_value(&mut self.page, Pages::Debug, "Debug");
                     ui.selectable_value(&mut self.page, Pages::About, "About");
                     if ui.button("Save").clicked() {
-                        self.cert_status.password.zeroize();
-                        self.cert_status.secret_text.zeroize();
-                        self.priv_certs = vec![];
-                        #[cfg(target_arch = "wasm32")]
-                        self.gpg_armoured_priv.zeroize();
                         let immutable_self: &MyApp = &self;
                         self.storage.write(immutable_self);
                     }

@@ -1,5 +1,33 @@
-use sequoia_openpgp::cert::CipherSuite;
+use sequoia_openpgp::cert::CipherSuite as Cs;
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Default, Debug, PartialEq, Clone, Copy)]
+pub enum CipherSuite {
+    #[default]
+    Cv25519,
+    Cv448,
+    RSA3k,
+    P256,
+    P384,
+    P521,
+    RSA2k,
+    RSA4k,
+}
+
+impl Into<Cs> for CipherSuite {
+    fn into(self) -> Cs {
+        match self {
+            Self::Cv25519 => Cs::Cv25519,
+            Self::Cv448 => Cs::Cv448,
+            Self::RSA3k => Cs::RSA3k,
+            Self::P256 => Cs::P256,
+            Self::P384 => Cs::P384,
+            Self::P521 => Cs::P521,
+            Self::RSA2k => Cs::RSA2k,
+            Self::RSA4k => Cs::RSA4k,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum BinOrAsc {
@@ -13,6 +41,17 @@ pub enum Subkeys {
     TransportEncryption(Option<ExpireTime>),
     Signing(Option<ExpireTime>),
     StorageEncryption(Option<ExpireTime>),
+}
+
+impl Subkeys {
+    pub fn set_expire(&mut self, expire: Option<ExpireTime>) {
+        *self = match self {
+            Self::Authentcation(_) => Self::Authentcation(expire),
+            Self::Signing(_) => Self::Signing(expire),
+            Self::StorageEncryption(_) => Self::StorageEncryption(expire),
+            Self::TransportEncryption(_) => Self::TransportEncryption(expire),
+        };
+    }
 }
 
 impl std::fmt::Display for Subkeys {
@@ -119,19 +158,20 @@ impl Into<std::time::Duration> for ExpireTime {
 
 #[derive(Serialize, Deserialize)]
 pub struct CertStatus {
-    #[serde(skip_serializing, skip_deserializing)]
     pub crypto_algo: CipherSuite,
-    #[serde(skip_serializing, skip_deserializing)]
     /// 0 is encrypt 1 is sign
     pub encrypt_sign: (CipherSuite, CipherSuite),
     pub display_name: String,
     pub comment: String,
     pub email: String,
     pub expire_date: Option<ExpireTime>,
+    #[serde(skip_serializing, skip_deserializing)]
     pub password: String,
+    #[serde(skip_serializing, skip_deserializing)]
     pub password2: String,
     pub show_window: bool,
     pub cert_text: String,
+    #[serde(skip_serializing, skip_deserializing)]
     pub secret_text: String,
     pub bin_or_ask: BinOrAsc,
     pub userid: Vec<String>,
