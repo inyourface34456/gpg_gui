@@ -267,13 +267,31 @@ impl MyApp {
 
         ui.add_space(5.);
 
-        ui.add(ExpireTimeSelector::new(
-            "test a",
-            &mut self.cert_status.expire_date,
-        ));
+        ui.checkbox(
+            &mut self.cert_status.indvidual_expire,
+            "Set expiration for indvidual subkeys",
+        );
 
-        for i in self.cert_status.desired_subkeys.iter_mut() {
-            i.set_expire(self.cert_status.expire_date);
+        if !self.cert_status.indvidual_expire {
+            ui.add(ExpireTimeSelector::new(
+                "Expire Time",
+                &mut self.cert_status.expire_date,
+            ));
+
+            for i in self.cert_status.desired_subkeys.iter_mut() {
+                i.set_expire(self.cert_status.expire_date);
+            }
+        } else {
+            for i in self.cert_status.desired_subkeys.iter_mut() {
+                ui.add(ExpireTimeSelector::new(
+                    &format!("Expire Time for {} Subkey", i),
+                    i.get_mut_ref(),
+                ));
+            }
+            ui.add(ExpireTimeSelector::new(
+                "Expire Time for Primary Cert",
+                &mut self.cert_status.expire_date,
+            ));
         }
 
         ui.add_space(5.);

@@ -1,4 +1,5 @@
 use egui::{Response, Ui, Widget};
+use std::mem::discriminant;
 
 pub struct MultiSelect<'a, T> {
     options: &'a [T],
@@ -66,7 +67,10 @@ where
 
             ui.horizontal_wrapped(|ui| {
                 for item in self.options {
-                    let is_selected = self.selected.contains(item);
+                    let is_selected = self
+                        .selected
+                        .iter()
+                        .any(|x| discriminant(x) == discriminant(item));
                     let r = ui.selectable_label(is_selected, format!("{}", item));
                     if r.clicked() {
                         if is_selected {

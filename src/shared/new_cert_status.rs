@@ -52,6 +52,15 @@ impl Subkeys {
             Self::TransportEncryption(_) => Self::TransportEncryption(expire),
         };
     }
+
+    pub fn get_mut_ref(&mut self) -> &mut Option<ExpireTime> {
+        match self {
+            Self::Authentcation(a) => a,
+            Self::Signing(a) => a,
+            Self::StorageEncryption(a) => a,
+            Self::TransportEncryption(a) => a,
+        }
+    }
 }
 
 impl std::fmt::Display for Subkeys {
@@ -179,6 +188,7 @@ pub struct CertStatus {
     pub password_vis: (bool, bool),
     pub desired_subkeys: Vec<Subkeys>,
     pub diff_algos: bool,
+    pub indvidual_expire: bool,
 }
 
 impl Default for CertStatus {
@@ -205,6 +215,7 @@ impl Default for CertStatus {
             ],
             diff_algos: false,
             encrypt_sign: (CipherSuite::Cv25519, CipherSuite::Cv25519),
+            indvidual_expire: false,
         }
     }
 }

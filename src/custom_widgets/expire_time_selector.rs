@@ -34,7 +34,7 @@ impl<'a> Widget for ExpireTimeSelector<'a> {
             };
 
             let t = ui.horizontal(|ui| {
-                        ui.label("Expire date: ");
+                        ui.label(self.id_salt);
                         ui.add_enabled_ui(
                             !self.expire.is_none()
                                 || *self.expire == Some(ExpireTime::Custom(1)),
