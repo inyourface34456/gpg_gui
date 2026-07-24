@@ -37,3 +37,7 @@ Right now I have no plans for a MacOS, as i do not own a Mac nor do I plan on pa
 # Misc
 
 I recently (7-11-26) started signing all commits, and decided to retoactivly singn all commits in the project. Thge way i did this made it look like all of the commits haoppened on the same day, which they did not. All of the content and commit messages are intact however.
+
+# Plans 
+
+Make as much stuff as possible into a custom widget, clean up the code and add more stuff to the certifacite import screen.
