@@ -80,7 +80,7 @@ pub fn init_logging() {
     console_error_panic_hook::set_once();
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Storage;
 
 impl Storage {
@@ -192,6 +192,7 @@ impl Storage {
                 return;
             }
         };
+        log::info!("saved");
     }
 
     pub fn read() -> Option<MyApp> {

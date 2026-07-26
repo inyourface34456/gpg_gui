@@ -1,8 +1,10 @@
+use crate::custom_widgets::add_userids::AddUserids;
 use crate::custom_widgets::expire_time_selector::ExpireTimeSelector;
 use crate::custom_widgets::multi_select::MultiSelect;
-use crate::shared::helpers::{self, user_id_to_componets};
+use crate::shared::helpers;
 use crate::shared::new_cert_status;
 use crate::{MyApp, platform};
+use crate::{selectable_values, try_or_return};
 use egui::Ui;
 use new_cert_status::{CipherSuite, Subkeys};
 use sequoia_openpgp::Packet;
@@ -53,14 +55,10 @@ impl MyApp {
         for i in &self.certs {
             ui.label(format!(
                 "User Id: {}",
-                match i
-                    .userids()
+                i.userids()
                     .map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string())
                     .next()
-                {
-                    Some(e) => e.to_string(),
-                    None => String::from("No names in export"),
-                }
+                    .unwrap_or(String::from("No names in Export"))
             ));
         }
 
@@ -69,14 +67,10 @@ impl MyApp {
         for i in &self.priv_certs {
             ui.label(format!(
                 "User Id: {}",
-                match i
-                    .userids()
+                i.userids()
                     .map(|cert| String::from_utf8_lossy(cert.userid().value()).to_string())
                     .next()
-                {
-                    Some(e) => e.to_string(),
-                    None => String::from("No names in export"),
-                }
+                    .unwrap_or(String::from("No names in Export"))
             ));
         }
         if !self.err.is_empty() {
@@ -97,25 +91,21 @@ impl MyApp {
                 egui::ComboBox::from_label(" ")
                     .selected_text(format!("{:?}", self.cert_status.crypto_algo))
                     .show_ui(ui, |ui| {
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::Cv25519, "Cv25519");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::Cv448, "Cv448");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::P256, "NistP256");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::P384, "NistP384");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::P521, "NistP521");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA2k, "RSA2k");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA3k, "RSA3k");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.crypto_algo, CipherSuite::RSA4k, "RSA4k");
-                    }
-                );
-                self.cert_status.encrypt_sign = (self.cert_status.crypto_algo, self.cert_status.crypto_algo);
+                        selectable_values!(
+                            ui,
+                            &mut self.cert_status.crypto_algo,
+                            CipherSuite::Cv25519 => "Cv25519",
+                            CipherSuite::Cv448   => "Cv448",
+                            CipherSuite::P256    => "NistP256",
+                            CipherSuite::P384    => "NistP384",
+                            CipherSuite::P521    => "NistP521",
+                            CipherSuite::RSA2k   => "RSA2k",
+                            CipherSuite::RSA3k   => "RSA3k",
+                            CipherSuite::RSA4k   => "RSA4k",
+                        );
+                    });
+                self.cert_status.encrypt_sign =
+                    (self.cert_status.crypto_algo, self.cert_status.crypto_algo);
             });
         } else {
             ui.horizontal(|ui| {
@@ -123,22 +113,18 @@ impl MyApp {
                 egui::ComboBox::from_label(" ")
                     .selected_text(format!("{:?}", self.cert_status.encrypt_sign.0))
                     .show_ui(ui, |ui| {
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::Cv25519, "Cv25519");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::Cv448, "Cv448");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::P256, "NistP256");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::P384, "NistP384");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::P521, "NistP521");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::RSA2k, "RSA2k");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::RSA3k, "RSA3k");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.0, CipherSuite::RSA4k, "RSA4k");
+                        selectable_values!(
+                            ui,
+                            &mut self.cert_status.crypto_algo,
+                            CipherSuite::Cv25519 => "Cv25519",
+                            CipherSuite::Cv448   => "Cv448",
+                            CipherSuite::P256    => "NistP256",
+                            CipherSuite::P384    => "NistP384",
+                            CipherSuite::P521    => "NistP521",
+                            CipherSuite::RSA2k   => "RSA2k",
+                            CipherSuite::RSA3k   => "RSA3k",
+                            CipherSuite::RSA4k   => "RSA4k",
+                        );
                     });
             });
             ui.horizontal(|ui| {
@@ -146,22 +132,18 @@ impl MyApp {
                 egui::ComboBox::from_label("  ")
                     .selected_text(format!("{:?}", self.cert_status.encrypt_sign.1))
                     .show_ui(ui, |ui| {
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::Cv25519, "Cv25519");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::Cv448, "Cv448");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::P256, "NistP256");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::P384, "NistP384");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::P521, "NistP521");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::RSA2k, "RSA2k");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::RSA3k, "RSA3k");
-                        #[rustfmt::skip]
-                        ui.selectable_value(&mut self.cert_status.encrypt_sign.1, CipherSuite::RSA4k, "RSA4k");
+                        selectable_values!(
+                            ui,
+                            &mut self.cert_status.crypto_algo,
+                            CipherSuite::Cv25519 => "Cv25519",
+                            CipherSuite::Cv448   => "Cv448",
+                            CipherSuite::P256    => "NistP256",
+                            CipherSuite::P384    => "NistP384",
+                            CipherSuite::P521    => "NistP521",
+                            CipherSuite::RSA2k   => "RSA2k",
+                            CipherSuite::RSA3k   => "RSA3k",
+                            CipherSuite::RSA4k   => "RSA4k",
+                        );
                     });
             });
         }
@@ -176,94 +158,14 @@ impl MyApp {
 
         ui.add_space(15.);
 
-        egui::containers::ComboBox::from_label("")
-            .selected_text(format!(
-                "UserID #{} ({})",
-                self.cert_status.editing_userid + 1,
-                self.cert_status.userid[self.cert_status.editing_userid]
-            ))
-            .show_ui(ui, |ui| {
-                for (index, value) in self.cert_status.userid.iter().enumerate() {
-                    if ui
-                        .selectable_value(
-                            &mut self.cert_status.editing_userid,
-                            index,
-                            format!("UserID #{} ({})", index + 1, value),
-                        )
-                        .clicked()
-                    {
-                        let userid_parts = user_id_to_componets(
-                            self.cert_status.userid[self.cert_status.editing_userid].clone(),
-                        );
-                        self.cert_status.display_name = userid_parts.0;
-                        self.cert_status.comment = userid_parts.1;
-                        self.cert_status.email = userid_parts.2;
-                    }
-                }
-            });
-
-        ui.horizontal(|ui| {
-            ui.label("Display Name*: ");
-            ui.text_edit_singleline(&mut self.cert_status.display_name);
-        });
-
-        ui.horizontal(|ui| {
-            ui.label("Comment (optional): ");
-            ui.text_edit_singleline(&mut self.cert_status.comment);
-        });
-
-        ui.horizontal(|ui| {
-            ui.label("Email (optional): ");
-            ui.text_edit_singleline(&mut self.cert_status.email);
-        });
-
-        let user_id;
-        if !self.cert_status.display_name.is_empty() {
-            if self.cert_status.comment.is_empty() && !self.cert_status.email.is_empty() {
-                user_id = format!(
-                    "{} <{}>",
-                    self.cert_status.display_name, self.cert_status.email
-                );
-            } else if !self.cert_status.comment.is_empty() && self.cert_status.email.is_empty() {
-                user_id = format!(
-                    "{} ({})",
-                    self.cert_status.display_name, self.cert_status.comment
-                );
-            } else if !self.cert_status.comment.is_empty() && !self.cert_status.email.is_empty() {
-                user_id = format!(
-                    "{} ({}) <{}>",
-                    self.cert_status.display_name, self.cert_status.comment, self.cert_status.email
-                );
-            } else {
-                user_id = self.cert_status.display_name.clone();
-            }
-        } else {
-            user_id = String::new()
-        }
-
-        self.cert_status.userid[self.cert_status.editing_userid] = user_id.clone();
-
-        ui.horizontal(|ui| {
-            if ui.button("Add UserID").clicked() {
-                self.cert_status.userid.push(String::new());
-                self.cert_status.display_name = String::new();
-                self.cert_status.email = String::new();
-                self.cert_status.comment = String::new();
-                self.cert_status.editing_userid = self.cert_status.userid.len() - 1;
-            }
-            if ui.button("Remove Current Userid").clicked() && self.cert_status.userid.len() > 1 {
-                self.cert_status
-                    .userid
-                    .remove(self.cert_status.editing_userid);
-                self.cert_status.editing_userid -= 1;
-                let userid_parts = user_id_to_componets(
-                    self.cert_status.userid[self.cert_status.editing_userid].clone(),
-                );
-                self.cert_status.display_name = userid_parts.0;
-                self.cert_status.comment = userid_parts.1;
-                self.cert_status.email = userid_parts.2;
-            }
-        });
+        ui.add(AddUserids::new(
+            " ",
+            &mut self.cert_status.editing_userid,
+            &mut self.cert_status.display_name,
+            &mut self.cert_status.comment,
+            &mut self.cert_status.email,
+            &mut self.cert_status.userid,
+        ));
 
         ui.add_space(5.);
 
@@ -422,34 +324,14 @@ impl MyApp {
             match result {
                 Some(result) => match result {
                     Ok((cert, rev)) => {
-                        let cert = match cert.insert_packets(vec![Packet::from(rev)]) {
-                            Ok(output) => output.0,
-                            Err(err) => {
-                                self.err = err.to_string();
-                                log::error!("{}", err);
-                                self.display_error(ui.ctx(), file!(), line!());
-                                return;
-                            }
-                        };
+                        let cert =
+                            try_or_return!(self, ui, cert.insert_packets(vec![Packet::from(rev)]))
+                                .0;
 
-                        let armored: Vec<u8> = match cert.armored().to_vec() {
-                            Ok(cert) => cert,
-                            Err(err) => {
-                                self.err = err.to_string();
-                                log::error!("{}", err);
-                                self.display_error(ui.ctx(), file!(), line!());
-                                vec![]
-                            }
-                        };
-                        self.cert_status.cert_text = match String::from_utf8(armored) {
-                            Ok(output) => output,
-                            Err(err) => {
-                                self.err = err.to_string();
-                                log::error!("{}", err);
-                                self.display_error(ui.ctx(), file!(), line!());
-                                String::new()
-                            }
-                        };
+                        let armored: Vec<u8> = try_or_return!(self, ui, cert.armored().to_vec());
+
+                        self.cert_status.cert_text =
+                            try_or_return!(self, ui, String::from_utf8(armored));
 
                         match CertParser::from_reader(self.cert_status.cert_text.as_bytes())
                             .map_err(|e| e.to_string())
@@ -472,15 +354,12 @@ impl MyApp {
                             }
                         }
 
-                        self.cert_status.secret_text = match cert.as_tsk().armored().to_vec() {
-                            Ok(bytes) => String::from_utf8(bytes).unwrap_or_default(),
-                            Err(err) => {
-                                self.err = err.to_string();
-                                log::error!("{}", err);
-                                self.display_error(ui.ctx(), file!(), line!());
-                                String::new()
-                            }
-                        };
+                        self.cert_status.secret_text = String::from_utf8(try_or_return!(
+                            self,
+                            ui,
+                            cert.as_tsk().armored().to_vec()
+                        ))
+                        .unwrap_or_default();
 
                         match CertParser::from_reader(self.cert_status.secret_text.as_bytes())
                             .map_err(|e| e.to_string())
@@ -533,76 +412,18 @@ impl MyApp {
                         });
                         if ui.button("Download").clicked() {
                             if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
-                                let cert_obj = match self.str_to_cert_obj(&self.cert_status.cert_text.clone()) {
-                                    Ok(cert) => cert,
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                        return;
-                                    }
-                                };
-                                let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
-                                    Ok(cert) => cert,
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                        return;
-                                    }
-                                };
-                                match platform::write_file("PublicKey", bin_dat) {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                    }
-                                }
+                                let cert_obj = try_or_return!(self, ui, self.str_to_cert_obj(&self.cert_status.cert_text.clone()));
+                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, cert_obj));
 
-                                let cert_obj = match self.str_to_cert_obj(&self.cert_status.secret_text.clone()) {
-                                    Ok(cert) => cert,
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                        return;
-                                    }
-                                };
-                                let bin_dat = match self.cert_obj_to_bin(ui, cert_obj) {
-                                    Ok(cert) => cert,
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                        return;
-                                    }
-                                };
-                                match platform::write_file("SecretKey", bin_dat) {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                    }
-                                }
+                                try_or_return!(self, ui, platform::write_file("PublicKey", bin_dat));
+
+                                let cert_obj = try_or_return!(self, ui, self.str_to_cert_obj(&self.cert_status.secret_text.clone()));
+                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, cert_obj));
+
+                                try_or_return!(self, ui, platform::write_file("SecretKey", bin_dat));
                             } else {
-                                match platform::write_file("PublicKey.asc", self.cert_status.cert_text.as_bytes().to_vec()) {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                    }
-                                }
-                                match platform::write_file("SecretKey.asc", self.cert_status.secret_text.as_bytes().to_vec()) {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        self.err = err.to_string();
-                                        log::error!("{}", err);
-                                        self.display_error(ui.ctx(), file!(), line!());
-                                    }
-                                }
+                                try_or_return!(self, ui, platform::write_file("PublicKey.asc", self.cert_status.cert_text.as_bytes().to_vec()));
+                                try_or_return!(self, ui, platform::write_file("SecretKey.asc", self.cert_status.secret_text.as_bytes().to_vec()));
                             }
                         }
                     });

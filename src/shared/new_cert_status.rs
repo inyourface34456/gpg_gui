@@ -29,7 +29,7 @@ impl Into<Cs> for CipherSuite {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum BinOrAsc {
     Bin,
     Asc,
@@ -165,7 +165,7 @@ impl Into<std::time::Duration> for ExpireTime {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct CertStatus {
     pub crypto_algo: CipherSuite,
     /// 0 is encrypt 1 is sign
@@ -174,13 +174,13 @@ pub struct CertStatus {
     pub comment: String,
     pub email: String,
     pub expire_date: Option<ExpireTime>,
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     pub password: String,
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     pub password2: String,
     pub show_window: bool,
     pub cert_text: String,
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     pub secret_text: String,
     pub bin_or_ask: BinOrAsc,
     pub userid: Vec<String>,

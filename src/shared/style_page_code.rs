@@ -4,7 +4,7 @@ use egui::Ui;
 
 impl MyApp {
     pub fn style(&mut self, ui: &mut Ui) {
-        // let style = ui.style_mut();
+        // i hate this
         ui.collapsing("Visuals", |ui| {
             ui.horizontal(|ui| {
                 let label = ui.label("Dark Mode: ");

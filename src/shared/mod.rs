@@ -11,13 +11,14 @@ use new_cert_status::{CertStatus, CipherSuite};
 use pages::Pages;
 use sequoia_openpgp::Cert;
 use serde::{Deserialize, Serialize};
+use web_time::{Duration, Instant};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MyApp {
     pub ui_scale: f32,
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     pub certs: Vec<Cert>,
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     pub priv_certs: Vec<Cert>,
     pub err: String,
     pub page: Pages,
@@ -29,7 +30,10 @@ pub struct MyApp {
     pub gpg_armoured: String,
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured_priv: String,
-    storage: Storage,
+    pub storage: Storage,
+    #[serde(skip, default = "web_time::Instant::now")]
+    pub last_tick: Instant,
+    pub interval: Duration,
 }
 
 impl Default for MyApp {
@@ -64,6 +68,8 @@ impl Default for MyApp {
             #[cfg(target_arch = "wasm32")]
             gpg_armoured_priv: String::new(),
             storage,
+            interval: Duration::from_secs(1),
+            last_tick: Instant::now(),
         }
     }
 }
@@ -90,6 +96,13 @@ impl eframe::App for MyApp {
 
             ctx.set_zoom_factor(self.ui_scale);
 
+            if self.last_tick.elapsed() >= self.interval {
+                self.last_tick = Instant::now();
+                self.storage.write(self);
+                ctx.request_repaint_after(self.interval);
+            }
+
+
             egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut self.page, Pages::Certs, "Certs");
@@ -98,10 +111,10 @@ impl eframe::App for MyApp {
                     ui.selectable_value(&mut self.page, Pages::Style, "Style");
                     ui.selectable_value(&mut self.page, Pages::Debug, "Debug");
                     ui.selectable_value(&mut self.page, Pages::About, "About");
-                    if ui.button("Save").clicked() {
-                        let immutable_self: &MyApp = &self;
-                        self.storage.write(immutable_self);
-                    }
+                    // if ui.button("Save").clicked() {
+                    //     let immutable_self: &MyApp = &self;
+                    //     self.storage.write(immutable_self);
+                    // }
                 });
             });
 
@@ -110,15 +123,13 @@ impl eframe::App for MyApp {
                 let warning_window = egui::containers::Window::new("WARNING!!!");
                 if self.show_warning {
                     warning_window.show(ctx, |ui| {
-                        ui.label("This is the web version, and as such, is not 100% garenteed to be totally secure, due to the fact that the crypto libaries I am using do not suport wasm  fully, and as such, I recommend that you download or compile the native version. As of right now, the only feature I was forced to disable is the constant time crypto.");
+                        ui.label("This is the web version, and as such, is not 100% garenteed to be totally secure, due to the fact that the crypto libaries I am using do not suport wasm  fully, and as such, I recommend that you download or compile the native version. As of right now, the only feature I was forced to disable is the constant time crypto. If you're on firefox, opning devtools will cause a lot of lag for some reason, this is a bug with firefox.");
                         if ui.button("Dismiss").clicked() {
                             self.show_warning = false;
                         }
                     });
                 }
             }
-
-            // self.display_error(ctx, file!(), line!());
 
             ui.add_space(20.);
             match self.page {
