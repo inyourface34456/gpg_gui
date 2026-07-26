@@ -7,7 +7,7 @@ pub mod style_page_code;
 use crate::platform::Storage;
 use eframe::egui;
 use egui::Context;
-use new_cert_status::{CertStatus, CipherSuite};
+use new_cert_status::CertStatus;
 use pages::Pages;
 use sequoia_openpgp::Cert;
 use serde::{Deserialize, Serialize};
@@ -47,7 +47,6 @@ impl Default for MyApp {
                         (vec![], vec![])
                     }
                 };
-                myapp.cert_status.crypto_algo = CipherSuite::Cv25519;
                 return myapp;
             }
             None => Storage::default(),

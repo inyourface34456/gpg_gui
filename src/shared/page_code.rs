@@ -89,23 +89,21 @@ impl MyApp {
             ui.horizontal(|ui| {
                 ui.label("Genreal Algorithm");
                 egui::ComboBox::from_label(" ")
-                    .selected_text(format!("{:?}", self.cert_status.crypto_algo))
+                    .selected_text(format!("{:?}", self.cert_status.encrypt_sign.0))
                     .show_ui(ui, |ui| {
                         selectable_values!(
                             ui,
-                            &mut self.cert_status.crypto_algo,
-                            CipherSuite::Cv25519 => "Cv25519",
-                            CipherSuite::Cv448   => "Cv448",
-                            CipherSuite::P256    => "NistP256",
-                            CipherSuite::P384    => "NistP384",
-                            CipherSuite::P521    => "NistP521",
-                            CipherSuite::RSA2k   => "RSA2k",
-                            CipherSuite::RSA3k   => "RSA3k",
-                            CipherSuite::RSA4k   => "RSA4k",
+                            &mut self.cert_status.encrypt_sign,
+                            (CipherSuite::Cv25519, CipherSuite::Cv25519) => "Cv25519",
+                            (CipherSuite::Cv448, CipherSuite::Cv448)     => "Cv448",
+                            (CipherSuite::P256, CipherSuite::P256)       => "NistP256",
+                            (CipherSuite::P384, CipherSuite::P384)       => "NistP384",
+                            (CipherSuite::P521, CipherSuite::P521)       => "NistP521",
+                            (CipherSuite::RSA2k, CipherSuite::RSA2k)     => "RSA2k",
+                            (CipherSuite::RSA3k, CipherSuite::RSA3k)     => "RSA3k",
+                            (CipherSuite::RSA4k, CipherSuite::RSA4k)     => "RSA4k",
                         );
                     });
-                self.cert_status.encrypt_sign =
-                    (self.cert_status.crypto_algo, self.cert_status.crypto_algo);
             });
         } else {
             ui.horizontal(|ui| {
@@ -115,7 +113,7 @@ impl MyApp {
                     .show_ui(ui, |ui| {
                         selectable_values!(
                             ui,
-                            &mut self.cert_status.crypto_algo,
+                            &mut self.cert_status.encrypt_sign.0,
                             CipherSuite::Cv25519 => "Cv25519",
                             CipherSuite::Cv448   => "Cv448",
                             CipherSuite::P256    => "NistP256",
@@ -134,7 +132,7 @@ impl MyApp {
                     .show_ui(ui, |ui| {
                         selectable_values!(
                             ui,
-                            &mut self.cert_status.crypto_algo,
+                            &mut self.cert_status.encrypt_sign.1,
                             CipherSuite::Cv25519 => "Cv25519",
                             CipherSuite::Cv448   => "Cv448",
                             CipherSuite::P256    => "NistP256",
@@ -288,29 +286,29 @@ impl MyApp {
                     self.cert_status.encrypt_sign.0.into(),
                     self.cert_status.encrypt_sign.1.into(),
                 );
-                cert_builder = cert_builder.set_cipher_suite(sign.into());
+                cert_builder = cert_builder.set_cipher_suite(sign);
 
                 for subkey_type in self.cert_status.desired_subkeys.iter() {
                     cert_builder = match subkey_type {
                         Subkeys::Authentcation(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_authentication(),
                             v.map(Into::into),
-                            Some(sign.into()),
+                            Some(sign),
                         ),
                         Subkeys::Signing(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_signing(),
                             v.map(Into::into),
-                            Some(sign.into()),
+                            Some(sign),
                         ),
                         Subkeys::StorageEncryption(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_storage_encryption(),
                             v.map(Into::into),
-                            Some(encrypt.into()),
+                            Some(encrypt),
                         ),
                         Subkeys::TransportEncryption(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_transport_encryption(),
                             v.map(Into::into),
-                            Some(encrypt.into()),
+                            Some(encrypt),
                         ),
                     };
                 }

@@ -167,7 +167,6 @@ impl Into<std::time::Duration> for ExpireTime {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CertStatus {
-    pub crypto_algo: CipherSuite,
     /// 0 is encrypt 1 is sign
     pub encrypt_sign: (CipherSuite, CipherSuite),
     pub display_name: String,
@@ -194,7 +193,6 @@ pub struct CertStatus {
 impl Default for CertStatus {
     fn default() -> Self {
         Self {
-            crypto_algo: CipherSuite::Cv25519,
             display_name: String::new(),
             comment: String::new(),
             email: String::new(),
