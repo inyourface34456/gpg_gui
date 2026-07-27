@@ -77,7 +77,6 @@ impl MyApp {
 
 pub fn init_logging() {
     eframe::WebLogger::init(log::LevelFilter::Trace).ok();
-    console_error_panic_hook::set_once();
 }
 
 #[derive(Serialize, Deserialize, Clone)]

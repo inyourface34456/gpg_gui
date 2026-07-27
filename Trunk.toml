@@ -23,6 +23,9 @@ command_arguments = [
     "--enable-bulk-memory",
     "--enable-nontrapping-float-to-int",
     "--enable-sign-ext",
+    "--converge",
+    "--strip-dwarf",
+    "--vacuum",
     "dist/.stage/gpg_gui_bg.wasm",
     "-o",
     "dist/.stage/gpg_gui_bg.wasm"
