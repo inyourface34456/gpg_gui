@@ -9,11 +9,11 @@ pub struct ExpireTimeSelector<'a> {
 
 impl<'a> ExpireTimeSelector<'a> {
     pub fn new(id_salt: &'a str, expire: &'a mut Option<ExpireTime>) -> Self {
-        Self { id_salt, expire }
+        Self { expire, id_salt }
     }
 }
 
-impl<'a> Widget for ExpireTimeSelector<'a> {
+impl Widget for ExpireTimeSelector<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
         let id = ui.make_persistent_id(self.id_salt);
 
@@ -40,7 +40,7 @@ impl<'a> Widget for ExpireTimeSelector<'a> {
                                 || *self.expire == Some(ExpireTime::Custom(1)),
                             |ui| {
                                 egui::ComboBox::from_label("")
-                                    .selected_text(format!("{}", temp))
+                                    .selected_text(&temp)
                                     .show_ui(ui, |ui| {
                                         #[rustfmt::skip]
                                         ui.selectable_value(self.expire, Some(ExpireTime::FiveDays), "Five Days");
@@ -97,7 +97,7 @@ impl<'a> Widget for ExpireTimeSelector<'a> {
                     let temp_2: u64 = match temp.parse() {
                         Ok(num) => num,
                         Err(err) => {
-                            log::error!("{}", err);
+                            log::error!("{err}");
                             match self.expire {
                                 Some(t) => (*t).into(),
                                 None => 0,

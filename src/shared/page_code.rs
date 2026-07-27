@@ -18,7 +18,7 @@ use zxcvbn::zxcvbn;
 impl MyApp {
     pub fn debug(&mut self, ui: &mut Ui) {
         if ui.button("Trigger Error").clicked() {
-            self.err = String::from("This is an error")
+            self.err = String::from("This is an error");
         }
 
         self.display_error(ui.ctx(), file!(), line!());
@@ -43,9 +43,10 @@ impl MyApp {
             log::trace!("Test Trace");
         }
 
-        if ui.button("Test Panic").clicked() {
-            panic!("Test")
-        }
+        assert!(
+            !ui.button("Test Panic").clicked(),
+            "test panic button clicked"
+        );
     }
 
     pub fn see_certs(&mut self, ui: &mut Ui) {
@@ -78,6 +79,7 @@ impl MyApp {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     pub fn new_cert(&mut self, ui: &mut Ui) {
         ui.heading("New Certificate");
         ui.separator();
@@ -85,27 +87,7 @@ impl MyApp {
         #[rustfmt::skip]
         ui.checkbox(&mut self.cert_status.diff_algos, "Diffrent algorithm for signing and encrypting");
 
-        if !self.cert_status.diff_algos {
-            ui.horizontal(|ui| {
-                ui.label("Genreal Algorithm");
-                egui::ComboBox::from_label(" ")
-                    .selected_text(format!("{:?}", self.cert_status.encrypt_sign.0))
-                    .show_ui(ui, |ui| {
-                        selectable_values!(
-                            ui,
-                            &mut self.cert_status.encrypt_sign,
-                            (CipherSuite::Cv25519, CipherSuite::Cv25519) => "Cv25519",
-                            (CipherSuite::Cv448, CipherSuite::Cv448)     => "Cv448",
-                            (CipherSuite::P256, CipherSuite::P256)       => "NistP256",
-                            (CipherSuite::P384, CipherSuite::P384)       => "NistP384",
-                            (CipherSuite::P521, CipherSuite::P521)       => "NistP521",
-                            (CipherSuite::RSA2k, CipherSuite::RSA2k)     => "RSA2k",
-                            (CipherSuite::RSA3k, CipherSuite::RSA3k)     => "RSA3k",
-                            (CipherSuite::RSA4k, CipherSuite::RSA4k)     => "RSA4k",
-                        );
-                    });
-            });
-        } else {
+        if self.cert_status.diff_algos {
             ui.horizontal(|ui| {
                 ui.label("Ecryption Algorithm");
                 egui::ComboBox::from_label(" ")
@@ -144,6 +126,26 @@ impl MyApp {
                         );
                     });
             });
+        } else {
+            ui.horizontal(|ui| {
+                ui.label("Genreal Algorithm");
+                egui::ComboBox::from_label(" ")
+                    .selected_text(format!("{:?}", self.cert_status.encrypt_sign.0))
+                    .show_ui(ui, |ui| {
+                        selectable_values!(
+                            ui,
+                            &mut self.cert_status.encrypt_sign,
+                            (CipherSuite::Cv25519, CipherSuite::Cv25519) => "Cv25519",
+                            (CipherSuite::Cv448, CipherSuite::Cv448)     => "Cv448",
+                            (CipherSuite::P256, CipherSuite::P256)       => "NistP256",
+                            (CipherSuite::P384, CipherSuite::P384)       => "NistP384",
+                            (CipherSuite::P521, CipherSuite::P521)       => "NistP521",
+                            (CipherSuite::RSA2k, CipherSuite::RSA2k)     => "RSA2k",
+                            (CipherSuite::RSA3k, CipherSuite::RSA3k)     => "RSA3k",
+                            (CipherSuite::RSA4k, CipherSuite::RSA4k)     => "RSA4k",
+                        );
+                    });
+            });
         }
 
         ui.add_space(10.);
@@ -172,19 +174,10 @@ impl MyApp {
             "Set expiration for indvidual subkeys",
         );
 
-        if !self.cert_status.indvidual_expire {
-            ui.add(ExpireTimeSelector::new(
-                "Expire Time",
-                &mut self.cert_status.expire_date,
-            ));
-
-            for i in self.cert_status.desired_subkeys.iter_mut() {
-                i.set_expire(self.cert_status.expire_date);
-            }
-        } else {
-            for i in self.cert_status.desired_subkeys.iter_mut() {
+        if self.cert_status.indvidual_expire {
+            for i in &mut self.cert_status.desired_subkeys {
                 ui.add(ExpireTimeSelector::new(
-                    &format!("Expire Time for {} Subkey", i),
+                    &format!("Expire Time for {i} Subkey"),
                     i.get_mut_ref(),
                 ));
             }
@@ -192,6 +185,15 @@ impl MyApp {
                 "Expire Time for Primary Cert",
                 &mut self.cert_status.expire_date,
             ));
+        } else {
+            ui.add(ExpireTimeSelector::new(
+                "Expire Time",
+                &mut self.cert_status.expire_date,
+            ));
+
+            for i in &mut self.cert_status.desired_subkeys {
+                i.set_expire(self.cert_status.expire_date);
+            }
         }
 
         ui.add_space(5.);
@@ -231,7 +233,7 @@ impl MyApp {
 
         ui.horizontal(|ui| {
             ui.label("Password Strength");
-            let bar = egui::ProgressBar::new(score.score() as u8 as f32 / 4.)
+            let bar = egui::ProgressBar::new(f32::from(score.score()) / 4.)
                 .show_percentage()
                 .fill(color)
                 .desired_width(200.);
@@ -241,10 +243,10 @@ impl MyApp {
 
         if let Some(feedback) = score.feedback() {
             if let Some(warning) = feedback.warning() {
-                ui.label(format!("Warning: {}", warning));
+                ui.label(format!("Warning: {warning}"));
             }
             for sugestion in feedback.suggestions() {
-                ui.label(format!("Suggestion: {}", sugestion));
+                ui.label(format!("Suggestion: {sugestion}"));
             }
         }
 
@@ -265,21 +267,21 @@ impl MyApp {
             if ui.button("Generate Certificate").clicked() {
                 let mut cert_builder;
                 if self.cert_status.expire_date.is_none() {
-                    cert_builder = CertBuilder::new()
+                    cert_builder = CertBuilder::new();
                 } else {
                     let expire_time = match self.cert_status.expire_date {
                         Some(time) => time.into(),
                         None => unreachable!(),
                     };
                     cert_builder = CertBuilder::new()
-                        .set_validity_period(std::time::Duration::from_secs(expire_time))
+                        .set_validity_period(std::time::Duration::from_secs(expire_time));
                 }
 
                 cert_builder =
                     cert_builder.set_password(Some(self.cert_status.password.clone().into()));
 
-                for i in self.cert_status.userid.iter() {
-                    cert_builder = cert_builder.add_userid(i.clone())
+                for i in &self.cert_status.userid {
+                    cert_builder = cert_builder.add_userid(i.clone().replace('\u{00A0}', " "));
                 }
 
                 let (sign, encrypt): (Cs, Cs) = (
@@ -288,7 +290,7 @@ impl MyApp {
                 );
                 cert_builder = cert_builder.set_cipher_suite(sign);
 
-                for subkey_type in self.cert_status.desired_subkeys.iter() {
+                for subkey_type in &self.cert_status.desired_subkeys {
                     cert_builder = match subkey_type {
                         Subkeys::Authentcation(v) => cert_builder.add_subkey(
                             KeyFlags::empty().set_authentication(),
@@ -319,8 +321,8 @@ impl MyApp {
                 self.cert_status.show_window = true;
             }
 
-            match result {
-                Some(result) => match result {
+            if let Some(result) = result {
+                match result {
                     Ok((cert, rev)) => {
                         let cert =
                             try_or_return!(self, ui, cert.insert_packets(vec![Packet::from(rev)]))
@@ -340,15 +342,15 @@ impl MyApp {
                                         Ok(cert) => cert,
                                         Err(err) => {
                                             self.err = err.to_string();
-                                            log::error!("{}", err);
+                                            log::error!("{err}");
                                             break;
                                         }
                                     });
                                 }
                             }
                             Err(err) => {
-                                self.err = err.to_string();
-                                log::error!("{}", err);
+                                self.err.clone_from(&err);
+                                log::error!("{err}");
                             }
                         }
 
@@ -368,25 +370,24 @@ impl MyApp {
                                         Ok(cert) => cert,
                                         Err(err) => {
                                             self.err = err.to_string();
-                                            log::error!("{}", err);
+                                            log::error!("{err}");
                                             break;
                                         }
                                     });
                                 }
                             }
                             Err(err) => {
-                                self.err = err.to_string();
-                                log::error!("{}", err);
+                                self.err.clone_from(&err);
+                                log::error!("{err}");
                             }
                         }
                     }
                     Err(err) => {
                         self.err = err.to_string();
-                        log::error!("{}", err);
+                        log::error!("{err}");
                         self.display_error(ui.ctx(), file!(), line!());
                     }
-                },
-                None => {}
+                }
             }
         }
 
@@ -398,8 +399,8 @@ impl MyApp {
             egui::containers::Window::new("Certs").vscroll(true).show(ui.ctx(), |ui| {
                 egui::ScrollArea::horizontal().show(ui, |ui| {
                     ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the private cert.\n");
-                    ui.label(egui::RichText::new(format!("Certificate: \n{}", cert_text)).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
-                    ui.label(egui::RichText::new(format!("Private Key: \n{}", secret_text)).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
+                    ui.label(egui::RichText::new(format!("Certificate: \n{cert_text}")).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
+                    ui.label(egui::RichText::new(format!("Private Key: \n{secret_text}")).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
                     ui.horizontal(|ui| {
                         if ui.button("Dismiss").clicked() {
                             self.cert_status.show_window = false;
@@ -410,18 +411,18 @@ impl MyApp {
                         });
                         if ui.button("Download").clicked() {
                             if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
-                                let cert_obj = try_or_return!(self, ui, self.str_to_cert_obj(&self.cert_status.cert_text.clone()));
-                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, cert_obj));
+                                let cert_obj = try_or_return!(self, ui, Self::str_to_cert_obj(&self.cert_status.cert_text.clone()));
+                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, &cert_obj));
 
-                                try_or_return!(self, ui, platform::write_file("PublicKey", bin_dat));
+                                try_or_return!(self, ui, platform::write_file("PublicKey", &bin_dat));
 
-                                let cert_obj = try_or_return!(self, ui, self.str_to_cert_obj(&self.cert_status.secret_text.clone()));
-                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, cert_obj));
+                                let cert_obj = try_or_return!(self, ui, Self::str_to_cert_obj(&self.cert_status.secret_text.clone()));
+                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, &cert_obj));
 
-                                try_or_return!(self, ui, platform::write_file("SecretKey", bin_dat));
+                                try_or_return!(self, ui, platform::write_file("SecretKey", &bin_dat));
                             } else {
-                                try_or_return!(self, ui, platform::write_file("PublicKey.asc", self.cert_status.cert_text.as_bytes().to_vec()));
-                                try_or_return!(self, ui, platform::write_file("SecretKey.asc", self.cert_status.secret_text.as_bytes().to_vec()));
+                                try_or_return!(self, ui, platform::write_file("PublicKey.asc", &self.cert_status.cert_text.as_bytes().to_vec()));
+                                try_or_return!(self, ui, platform::write_file("SecretKey.asc", &self.cert_status.secret_text.as_bytes().to_vec()));
                             }
                         }
                     });
@@ -430,11 +431,9 @@ impl MyApp {
         }
     }
 
-    pub fn sign(&mut self, _ui: &mut Ui) {
-        return;
-    }
+    // pub fn sign(&mut self, _ui: &mut Ui) {}
 
-    pub fn about(&mut self, ui: &mut Ui) {
+    pub fn about(ui: &mut Ui) {
         ui.label(format!(
             "Version: {} ({})",
             include_str!("../../VERSION").replace('\n', ""),

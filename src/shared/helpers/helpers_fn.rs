@@ -6,39 +6,39 @@ use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::serialize::Marshal;
 
 impl MyApp {
-    pub fn cert_obj_to_bin(&mut self, ui: &Ui, cert: Cert) -> Result<Vec<u8>, String> {
+    pub fn cert_obj_to_bin(&mut self, ui: &Ui, cert: &Cert) -> Result<Vec<u8>, String> {
         let mut buf = Vec::new();
         match cert.serialize(&mut buf) {
             Ok(cert) => cert,
             Err(err) => {
                 self.err = err.to_string();
-                log::error!("{}", err);
+                log::error!("{err}");
                 self.display_error(ui.ctx(), file!(), line!());
                 return Err(err.to_string());
             }
-        };
+        }
         Ok(buf)
     }
 
-    pub fn str_to_cert_obj(&mut self, input: &str) -> Result<Cert, String> {
+    pub fn str_to_cert_obj(input: &str) -> Result<Cert, String> {
         let cert = Cert::from_bytes(input.as_bytes()).map_err(|err| err.to_string())?;
         Ok(cert)
     }
 }
 
-pub fn user_id_to_componets(user_id: String) -> (String, String, String) {
-    let userid_com = user_id.split(' ').collect::<Vec<&str>>();
+pub fn user_id_to_componets(user_id: &str) -> (String, String, String) {
+    let userid_com = user_id.split('\u{00A0}').collect::<Vec<&str>>();
     match userid_com.len() {
         1 => (userid_com[0].to_string(), String::new(), String::new()),
         2 => (
             userid_com[0].to_string(),
-            userid_com[1].replace('(', "").replace(')', ""),
+            userid_com[1].replace(['(', ')'], ""),
             String::new(),
         ),
         3 => (
             userid_com[0].to_string(),
-            userid_com[1].replace('(', "").replace(')', ""),
-            userid_com[2].replace('<', "").replace('>', ""),
+            userid_com[1].replace(['(', ')'], ""),
+            userid_com[2].replace(['<', '>'], ""),
         ),
         _ => (String::new(), String::new(), String::new()),
     }

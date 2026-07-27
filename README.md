@@ -2,6 +2,10 @@
 
 This is a native and web gui for interacting with the PGP protocall. When I eventually finnish this project, anyone will be able to use this in place of the gpg commandline tool at the very least.
 
+# Contributing 
+
+When contributing, you must use clippy on padantic mode, and have a good reason for allowing lints. You must also run `cargo fmt` on your code.
+
 # Testing Guidelines
 
 You should have a working knowledge of rust and PGP protocall, the ability to communicate technically and technical skills in whatever operating system you are using ~(if you are testing on windows, you will have to figure out how to build it your self, I just could not figure out how to build it on windows)~ (windows builds sholuld now work with the `x86_64-pc-windows-gnu` target). As for instructions, try to break it in any way possible, short of feeding it invalid data. Use it, and give me feedback on design (I sI have very little UI/ UX expirence). Give me recommendations in features to add. If you want to contribute, you should know rust at an intermediate level, as well as egui, and (optionally) wasm. If you find bugs you can report them via the github issue tracker or dm me on discord at `inyourface3445`.

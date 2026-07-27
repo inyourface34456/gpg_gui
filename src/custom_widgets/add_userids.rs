@@ -30,7 +30,7 @@ impl<'a> AddUserids<'a> {
     }
 }
 
-impl<'a> Widget for AddUserids<'a> {
+impl Widget for AddUserids<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
         let id = ui.make_persistent_id(self.id_salt);
         ui.push_id(id, |ui| {
@@ -59,7 +59,7 @@ impl<'a> Widget for AddUserids<'a> {
                             .clicked()
                         {
                             let userid_parts =
-                                user_id_to_componets(self.userid[*self.editing_userid].clone());
+                                user_id_to_componets(&self.userid[*self.editing_userid].clone());
                             *self.name = userid_parts.0;
                             *self.comment = userid_parts.1;
                             *self.email = userid_parts.2;
@@ -87,21 +87,22 @@ impl<'a> Widget for AddUserids<'a> {
             merge(t.response, &mut response);
 
             let user_id;
-            if !self.name.is_empty() {
-                if self.comment.is_empty() && !self.email.is_empty() {
-                    user_id = format!("{} <{}>", self.name, self.email);
-                } else if !self.comment.is_empty() && self.email.is_empty() {
-                    user_id = format!("{} ({})", self.name, self.comment);
-                } else if !self.comment.is_empty() && !self.email.is_empty() {
-                    user_id = format!("{} ({}) <{}>", self.name, self.comment, self.email);
-                } else {
-                    user_id = self.name.clone();
-                }
+            if self.name.is_empty() {
+                user_id = String::new();
+            } else if self.comment.is_empty() && !self.email.is_empty() {
+                user_id = format!("{}\u{00A0}<{}>", self.name, self.email);
+            } else if !self.comment.is_empty() && self.email.is_empty() {
+                user_id = format!("{}\u{00A0}({})", self.name, self.comment);
+            } else if !self.comment.is_empty() && !self.email.is_empty() {
+                user_id = format!(
+                    "{}\u{00A0}({})\u{00A0}<{}>",
+                    self.name, self.comment, self.email
+                );
             } else {
-                user_id = String::new()
+                user_id = self.name.clone();
             }
 
-            self.userid[*self.editing_userid] = user_id.clone();
+            self.userid[*self.editing_userid].clone_from(&user_id);
 
             ui.horizontal(|ui| {
                 let t = ui.button("Add UserID");
@@ -120,7 +121,7 @@ impl<'a> Widget for AddUserids<'a> {
                     self.userid.remove(*self.editing_userid);
                     *self.editing_userid -= 1;
                     let userid_parts =
-                        user_id_to_componets(self.userid[*self.editing_userid].clone());
+                        user_id_to_componets(&self.userid[*self.editing_userid].clone());
                     *self.name = userid_parts.0;
                     *self.comment = userid_parts.1;
                     *self.email = userid_parts.2;

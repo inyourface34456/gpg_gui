@@ -14,6 +14,8 @@ pub enum CipherSuite {
     RSA4k,
 }
 
+// this is much eaiser to make work with into rather then from
+#[allow(clippy::from_over_into)]
 impl Into<Cs> for CipherSuite {
     fn into(self) -> Cs {
         match self {
@@ -55,10 +57,10 @@ impl Subkeys {
 
     pub fn get_mut_ref(&mut self) -> &mut Option<ExpireTime> {
         match self {
-            Self::Authentcation(a) => a,
-            Self::Signing(a) => a,
-            Self::StorageEncryption(a) => a,
-            Self::TransportEncryption(a) => a,
+            Self::Authentcation(a)
+            | Self::Signing(a)
+            | Self::StorageEncryption(a)
+            | Self::TransportEncryption(a) => a,
         }
     }
 }
@@ -104,9 +106,11 @@ impl ExpireTime {
     const TWO_MONTHS: u64 = 60 * 60 * 24 * 27 * 2;
     const TWO_WEEKS: u64 = 60 * 60 * 24 * 7 * 2;
     const TWO_YEARS: u64 = 60 * 60 * 24 * 365 * 2;
+}
 
-    pub fn to_string(&self) -> String {
-        format!("{}", Into::<u64>::into(*self))
+impl std::fmt::Display for ExpireTime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", Into::<u64>::into(*self))
     }
 }
 
@@ -130,6 +134,8 @@ impl From<u64> for ExpireTime {
     }
 }
 
+// this is much eaiser to make work with into rather then from
+#[allow(clippy::from_over_into)]
 impl Into<u64> for ExpireTime {
     fn into(self) -> u64 {
         match self {
@@ -159,6 +165,8 @@ impl Subkeys {
     ];
 }
 
+// this is much eaiser to make work with into rather then from
+#[allow(clippy::from_over_into)]
 impl Into<std::time::Duration> for ExpireTime {
     fn into(self) -> std::time::Duration {
         std::time::Duration::from_secs(self.into())

@@ -43,13 +43,10 @@ fn main() {
             .dyn_into::<web_sys::HtmlCanvasElement>()
             .expect("the_canvas_id was not a HtmlCanvasElement");
 
-        if let Some(window) = web_sys::window() {
-            if let Some(doc) = window.document() {
-                if let Some(el) = doc.get_element_by_id("loading") {
-                    el.set_attribute("style", "display:none;").ok();
-                }
-            }
-        }
+        web_sys::window()
+            .and_then(|window| window.document())
+            .and_then(|doc| doc.get_element_by_id("loading"))
+            .map(|el| el.set_attribute("style", "display:none;").ok());
 
         eframe::WebRunner::new()
             .start(

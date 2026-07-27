@@ -43,12 +43,14 @@ impl Default for MyApp {
                 (myapp.certs, myapp.priv_certs) = match crate::platform::get_certs("", "") {
                     Ok(certs) => certs,
                     Err(err) => {
-                        log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                        log::error!("{}@{}: {}", file!(), line!(), err);
                         (vec![], vec![])
                     }
                 };
                 return myapp;
             }
+            // this must handle both native and wasm impls, and the native one has feilds, and the wasm one does not, requiring the default call
+            #[allow(clippy::default_constructed_unit_structs)]
             None => Storage::default(),
         };
 
@@ -78,11 +80,11 @@ impl eframe::App for MyApp {
         ctx.set_style(self.style.clone());
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
-                if (key.key_pressed(egui::Key::Plus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] > 0.) {
-                    self.ui_scale *= 1.1
+                if key.modifiers.ctrl && (key.key_pressed(egui::Key::Plus) || key.raw_scroll_delta[1] > 0.) {
+                    self.ui_scale *= 1.1;
                 }
-                if (key.key_pressed(egui::Key::Minus) && key.modifiers.ctrl) || (key.modifiers.ctrl && key.raw_scroll_delta[1] < 0.) {
-                    self.ui_scale *= 0.9
+                if key.modifiers.ctrl && (key.key_pressed(egui::Key::Minus) || key.raw_scroll_delta[1] < 0.) {
+                    self.ui_scale *= 0.9;
                 }
                 if let Some(multi_touch) = key.multi_touch() {
                     let raw_delta = multi_touch.zoom_delta;
@@ -97,7 +99,7 @@ impl eframe::App for MyApp {
 
             if self.last_tick.elapsed() >= self.interval {
                 self.last_tick = Instant::now();
-                self.storage.write(self);
+                Storage::write(self);
                 ctx.request_repaint_after(self.interval);
             }
 
@@ -154,12 +156,13 @@ impl eframe::App for MyApp {
                 }
                 Pages::Sign => {
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        self.sign(ui);
+                        // self.sign(ui);
+                        ui.label("WIP")
                     });
                 }
                 Pages::About => {
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        self.about(ui);
+                        Self::about(ui);
                     });
                 }
             }

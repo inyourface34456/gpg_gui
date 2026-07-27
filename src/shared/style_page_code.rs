@@ -3,6 +3,7 @@ use egui::Color32;
 use egui::Ui;
 
 impl MyApp {
+    #[allow(clippy::too_many_lines)]
     pub fn style(&mut self, ui: &mut Ui) {
         // i hate this
         ui.collapsing("Visuals", |ui| {
@@ -681,12 +682,9 @@ impl MyApp {
                 });
             });
 
-            match shadow_response.body_response {
-                Some(body) => {
-                    body.on_hover_text_at_pointer("Docs say that this is very similer to CSS drop shadow");
-                }
-                None => {}
-            };
+            if let Some(body) = shadow_response.body_response {
+                body.on_hover_text_at_pointer("Docs say that this is very similer to CSS drop shadow");
+            }
 
             ui.collapsing("Window Stroke", |ui| {
                 ui.horizontal(|ui| {
@@ -925,7 +923,7 @@ impl MyApp {
                 let label = ui.label("How to display Colors: ");
                 label.on_hover_text("How to display numeric color values (gamma byte is 0-255, linear is 0-1)");
                 let mut temp = self.style.visuals.numeric_color_space;
-                egui::ComboBox::from_label("").selected_text(format!("{:?}", temp)).show_ui(ui, |ui| {
+                egui::ComboBox::from_label("").selected_text(format!("{temp:?}")).show_ui(ui, |ui| {
                     ui.selectable_value(&mut temp, eframe::egui::style::NumericColorSpace::GammaByte, "GammaByte");
                     ui.selectable_value(&mut temp, eframe::egui::style::NumericColorSpace::Linear, "Linear");
                 });

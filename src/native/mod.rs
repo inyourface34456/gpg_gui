@@ -17,7 +17,7 @@ use std::{
     process::Command,
 };
 
-/// Interface must be identical between wasm and native.
+// Interface must be identical between wasm and native.
 
 pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     log::info!("getting certs");
@@ -29,7 +29,7 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => certs.push(cert),
-            Err(e) => log::error!("Skipping malformed cert: {}", e),
+            Err(e) => log::error!("Skipping malformed cert: {e}"),
         }
     }
 
@@ -41,7 +41,7 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => priv_certs.push(cert),
-            Err(e) => log::error!("Skipping malformed cert: {}", e),
+            Err(e) => log::error!("Skipping malformed cert: {e}"),
         }
     }
 
@@ -57,8 +57,8 @@ impl MyApp {
         let certs = match get_certs("", "") {
             Ok(certs) => certs,
             Err(err) => {
-                self.err = err.to_string();
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                self.err.clone_from(&err);
+                log::error!("{}@{}: {err}", file!(), line!());
                 self.display_error(ui.ctx(), file!(), line!());
                 return;
             }
@@ -72,7 +72,7 @@ pub fn init_logging() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Storage {
     storage: HashMap<String, String>,
 }
@@ -80,11 +80,11 @@ pub struct Storage {
 impl Storage {
     const FILENAME: &'static str = "data";
 
-    pub fn write(&self, data: &MyApp) {
+    pub fn write(data: &MyApp) {
         let data: Vec<u8> = match to_vec(&data) {
             Ok(data) => data,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {err}", file!(), line!());
                 return;
             }
         };
@@ -92,24 +92,23 @@ impl Storage {
         let mut file = match File::create(Self::FILENAME) {
             Ok(file) => file,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {err}", file!(), line!());
                 return;
             }
         };
-        match file.write(&data) {
-            Ok(_) => {}
+        match file.write_all(&data) {
+            Ok(()) => {}
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
-                return;
+                log::error!("{}@{}: {err}", file!(), line!());
             }
-        };
+        }
     }
 
     pub fn read() -> Option<MyApp> {
         let mut file_handle = match File::open(Self::FILENAME) {
             Ok(file) => file,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {err}", file!(), line!());
                 return None;
             }
         };
@@ -117,29 +116,32 @@ impl Storage {
         let file_metadata = match fs::metadata(Self::FILENAME) {
             Ok(data) => data,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {err}", file!(), line!());
                 return None;
             }
         };
 
         #[cfg(target_os = "windows")]
+        #[allow(clippy::cast_possible_truncation)]
         let mut data: Vec<u8> = Vec::with_capacity(file_metadata.file_size() as usize);
         #[cfg(target_os = "linux")]
+        // i very much doubt that this file will get bigger then 4gb on 32 bit targets
+        #[allow(clippy::cast_possible_truncation)]
         let mut data: Vec<u8> = Vec::with_capacity(file_metadata.size() as usize);
         match file_handle.read_to_end(&mut data) {
             Ok(bytes) => {
-                log::info!("read in {} bytes", bytes);
+                log::info!("read in {bytes} bytes");
             }
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {err}", file!(), line!());
                 return None;
             }
-        };
+        }
 
         let myapp: MyApp = match from_bytes(&data) {
             Ok(map) => map,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {err}", file!(), line!());
                 return None;
             }
         };
@@ -150,15 +152,7 @@ impl Storage {
     }
 }
 
-impl Default for Storage {
-    fn default() -> Self {
-        Self {
-            storage: HashMap::new(),
-        }
-    }
-}
-
-pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
+pub fn write_file(filename: &str, data: &Vec<u8>) -> Result<(), String> {
     let mut file = fs::File::create(filename).map_err(|e| e.to_string())?;
     file.write(data.as_slice()).map_err(|err| err.to_string())?;
     Ok(())

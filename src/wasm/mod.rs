@@ -11,14 +11,14 @@ use wasm_bindgen::JsCast;
 use web_sys::window;
 use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, Url};
 
-/// Interface must be identical between wasm and native.
+// Interface must be identical between wasm and native.
 
 pub fn get_certs(armoured: &str, priv_key: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     let mut certs = vec![];
     for cert in CertParser::from_reader(armoured.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => certs.push(cert),
-            Err(e) => log::error!("Skipping malformed cert: {}", e),
+            Err(e) => log::error!("Skipping malformed cert: {e}"),
         }
     }
 
@@ -26,7 +26,7 @@ pub fn get_certs(armoured: &str, priv_key: &str) -> Result<(Vec<Cert>, Vec<Cert>
     for cert in CertParser::from_reader(priv_key.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
             Ok(cert) => priv_keys.push(cert),
-            Err(e) => log::error!("Skipping malformed cert: {}", e),
+            Err(e) => log::error!("Skipping malformed cert: {e}"),
         }
     }
 
@@ -106,23 +106,23 @@ impl Storage {
     //     Ok(())
     // }
 
-    fn get_item(&mut self, key: &str) -> Result<Option<String>, String> {
+    fn get_item(key: &str) -> Result<Option<String>, String> {
         let window = window().ok_or("no global `window` exists")?;
         let storage = window
             .local_storage()
             .map_err(|err| {
                 if err.is_string() {
-                    format!("{}", err.as_string().unwrap())
+                    err.as_string().unwrap()
                 } else {
-                    format!("{:?}", err)
+                    format!("{err:?}")
                 }
             })?
             .ok_or("no localStorage available")?;
         storage.get_item(key).map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })
     }
@@ -149,11 +149,33 @@ impl Storage {
     //     Ok(())
     // }
 
-    pub fn write(&self, data: &MyApp) {
+    fn set_item(key: &str, value: &str) -> Result<(), String> {
+        let window = window().ok_or("no global `window` exists")?;
+        let storage = window
+            .local_storage()
+            .map_err(|err| {
+                if err.is_string() {
+                    err.as_string().unwrap()
+                } else {
+                    format!("{err:?}")
+                }
+            })?
+            .ok_or("no localStorage available")?;
+        storage.set_item(key, value).map_err(|err| {
+            if err.is_string() {
+                err.as_string().unwrap()
+            } else {
+                format!("{err:?}")
+            }
+        })?;
+        Ok(())
+    }
+
+    pub fn write(data: &MyApp) {
         let myapp = match to_vec(&data) {
             Ok(data) => data,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {}", file!(), line!(), err);
                 return;
             }
         };
@@ -163,44 +185,21 @@ impl Storage {
         );
         let data = engine.encode(myapp);
 
-        fn set_item(key: &str, value: &str) -> Result<(), String> {
-            let window = window().ok_or("no global `window` exists")?;
-            let storage = window
-                .local_storage()
-                .map_err(|err| {
-                    if err.is_string() {
-                        format!("{}", err.as_string().unwrap())
-                    } else {
-                        format!("{:?}", err)
-                    }
-                })?
-                .ok_or("no localStorage available")?;
-            storage.set_item(key, value).map_err(|err| {
-                if err.is_string() {
-                    format!("{}", err.as_string().unwrap())
-                } else {
-                    format!("{:?}", err)
-                }
-            })?;
-            Ok(())
-        }
-
-        match set_item("MyApp", &data) {
-            Ok(_) => {}
+        match Self::set_item("MyApp", &data) {
+            Ok(()) => {}
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {}", file!(), line!(), err);
                 return;
             }
-        };
+        }
         log::info!("saved");
     }
 
     pub fn read() -> Option<MyApp> {
-        let mut storage = Storage::default();
-        let data = match storage.get_item("MyApp") {
+        let data = match Self::get_item("MyApp") {
             Ok(data) => data.unwrap_or_default(),
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {}", file!(), line!(), err);
                 return None;
             }
         };
@@ -212,7 +211,7 @@ impl Storage {
         let data = match engine.decode(data) {
             Ok(data) => data,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {}", file!(), line!(), err);
                 return None;
             }
         };
@@ -220,7 +219,7 @@ impl Storage {
         let myapp: MyApp = match from_bytes(&data) {
             Ok(data) => data,
             Err(err) => {
-                log::error!("{}@{}: {}", file!(), line!(), err.to_string());
+                log::error!("{}@{}: {}", file!(), line!(), err);
                 return None;
             }
         };
@@ -235,7 +234,7 @@ impl Default for Storage {
     }
 }
 
-pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
+pub fn write_file(filename: &str, data: &Vec<u8>) -> Result<(), String> {
     let uint8_array = Uint8Array::from(data.as_slice());
 
     let array = Array::new();
@@ -247,18 +246,18 @@ pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
     let blob =
         Blob::new_with_u8_array_sequence_and_options(&array, &blob_options).map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })?;
 
     // 4. Create an object URL
     let url = Url::create_object_url_with_blob(&blob).map_err(|err| {
         if err.is_string() {
-            format!("{}", err.as_string().unwrap())
+            err.as_string().unwrap()
         } else {
-            format!("{:?}", err)
+            format!("{err:?}")
         }
     })?;
 
@@ -270,17 +269,17 @@ pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
         .create_element("a")
         .map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })?
         .dyn_into::<HtmlAnchorElement>()
         .map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })?;
 
@@ -291,9 +290,9 @@ pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
         .set_property("display", "none")
         .map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })?;
 
@@ -303,9 +302,9 @@ pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
         .append_child(&anchor)
         .map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })?;
     anchor.click();
@@ -315,18 +314,18 @@ pub fn write_file(filename: &str, data: Vec<u8>) -> Result<(), String> {
         .remove_child(&anchor)
         .map_err(|err| {
             if err.is_string() {
-                format!("{}", err.as_string().unwrap())
+                err.as_string().unwrap()
             } else {
-                format!("{:?}", err)
+                format!("{err:?}")
             }
         })?;
 
     // 6. Clean up
     Url::revoke_object_url(&url).map_err(|err| {
         if err.is_string() {
-            format!("{}", err.as_string().unwrap())
+            err.as_string().unwrap()
         } else {
-            format!("{:?}", err)
+            format!("{err:?}")
         }
     })?;
 

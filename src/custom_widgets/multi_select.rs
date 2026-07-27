@@ -17,7 +17,7 @@ impl<'a, T> MultiSelect<'a, T> {
     }
 }
 
-impl<'a, T> Widget for MultiSelect<'a, T>
+impl<T> Widget for MultiSelect<'_, T>
 where
     T: std::cmp::PartialEq,
     T: Clone,
@@ -44,7 +44,7 @@ where
                         let r = ui
                             .group(|ui| {
                                 ui.horizontal(|ui| {
-                                    ui.label(format!("{}", item));
+                                    ui.label(item.to_string());
                                     if ui.small_button("x").clicked() {
                                         to_remove = Some(item.clone());
                                     }
@@ -71,7 +71,7 @@ where
                         .selected
                         .iter()
                         .any(|x| discriminant(x) == discriminant(item));
-                    let r = ui.selectable_label(is_selected, format!("{}", item));
+                    let r = ui.selectable_label(is_selected, item.to_string());
                     if r.clicked() {
                         if is_selected {
                             for (index, item_) in self.selected.iter().enumerate() {
