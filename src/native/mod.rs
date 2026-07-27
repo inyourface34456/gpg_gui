@@ -78,7 +78,7 @@ impl MyApp {
                 self.err.clone_from(&err);
                 log::error!("{}@{}: {err}", file!(), line!());
                 self.display_error(ui.ctx(), file!(), line!());
-                self
+                self.gpg_errored = true;
                 return;
             }
         };
