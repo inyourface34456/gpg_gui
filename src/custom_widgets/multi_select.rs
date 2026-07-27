@@ -71,11 +71,11 @@ where
                         .selected
                         .iter()
                         .any(|x| discriminant(x) == discriminant(item));
-                    let r = ui.selectable_label(is_selected, item.to_string());
+                    let r = ui.selectable_label(is_selected, item.to_string()); 
                     if r.clicked() {
                         if is_selected {
                             for (index, item_) in self.selected.iter().enumerate() {
-                                if item_ == item {
+                                if discriminant(item_) == discriminant(item) {
                                     self.selected.remove(index);
                                     break;
                                 }

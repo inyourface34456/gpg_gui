@@ -25,6 +25,15 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     command.arg("--export").arg("-a");
     let output = command.output().map_err(|e| e.to_string())?;
     let armored_output = String::from_utf8_lossy(&output.stdout);
+    let possible_error = String::from_utf8_lossy(&output.stderr);
+    match command.status() {
+        Ok(exit_code) => {
+            if !exit_code.success() {
+                log::error!("Gpg exited unsucsessfully: {possible_error}");
+            }
+        }
+        Err(err) => log::error!("Error checking status: {err}")
+    }
     let mut certs = vec![];
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
@@ -37,6 +46,15 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
     command.arg("--export-secret-keys").arg("-a");
     let output = command.output().map_err(|e| e.to_string())?;
     let armored_output = String::from_utf8_lossy(&output.stdout);
+    let possible_error = String::from_utf8_lossy(&output.stderr);
+    match command.status() {
+        Ok(exit_code) => {
+            if !exit_code.success() {
+                log::error!("Gpg exited unsucsessfully: {possible_error}");
+            }
+        }
+        Err(err) => log::error!("Error checking status: {err}")
+    }
     let mut priv_certs = vec![];
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
         match cert {
@@ -60,6 +78,7 @@ impl MyApp {
                 self.err.clone_from(&err);
                 log::error!("{}@{}: {err}", file!(), line!());
                 self.display_error(ui.ctx(), file!(), line!());
+                self
                 return;
             }
         };

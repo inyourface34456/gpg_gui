@@ -29,11 +29,13 @@ pub struct MyApp {
     #[cfg(target_arch = "wasm32")]
     pub gpg_armoured: String,
     #[cfg(target_arch = "wasm32")]
+    #[serde(skip)]
     pub gpg_armoured_priv: String,
     pub storage: Storage,
     #[serde(skip, default = "web_time::Instant::now")]
     pub last_tick: Instant,
     pub interval: Duration,
+    pub gpg_errored: bool,
 }
 
 impl Default for MyApp {
@@ -71,13 +73,16 @@ impl Default for MyApp {
             storage,
             interval: Duration::from_secs(1),
             last_tick: Instant::now(),
+            gpg_errored: false,
         }
     }
 }
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.set_style(self.style.clone());
+        if ctx.style().as_ref() != &self.style {
+            ctx.set_style(self.style.clone());
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.input(|key| {
                 if key.modifiers.ctrl && (key.key_pressed(egui::Key::Plus) || key.raw_scroll_delta[1] > 0.) {
