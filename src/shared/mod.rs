@@ -4,12 +4,20 @@ pub mod page_code;
 pub mod pages;
 pub mod style_page_code;
 
+use crate::platform;
 use crate::platform::Storage;
+use crate::try_or_return;
 use eframe::egui;
 use egui::Context;
+use egui::Ui;
 use new_cert_status::CertStatus;
 use pages::Pages;
 use sequoia_openpgp::Cert;
+use sequoia_openpgp::Packet;
+use sequoia_openpgp::cert::CertParser;
+use sequoia_openpgp::packet::Signature;
+use sequoia_openpgp::parse::Parse;
+use sequoia_openpgp::serialize::SerializeInto;
 use serde::{Deserialize, Serialize};
 use web_time::{Duration, Instant};
 
@@ -189,5 +197,96 @@ impl MyApp {
                 }
             });
         }
+    }
+
+    pub fn handle_certs(&mut self, cert: Cert, rev: Signature, ui: &mut Ui) {
+        let cert = try_or_return!(self, ui, cert.insert_packets(vec![Packet::from(rev)])).0;
+
+        let armored: Vec<u8> = try_or_return!(self, ui, cert.armored().to_vec());
+
+        self.cert_status.cert_text = try_or_return!(self, ui, String::from_utf8(armored));
+
+        match CertParser::from_reader(self.cert_status.cert_text.as_bytes())
+            .map_err(|e| e.to_string())
+        {
+            Ok(cert) => {
+                for cert in cert {
+                    self.certs.push(match cert {
+                        Ok(cert) => cert,
+                        Err(err) => {
+                            self.err = err.to_string();
+                            log::error!("{err}");
+                            break;
+                        }
+                    });
+                }
+            }
+            Err(err) => {
+                self.err.clone_from(&err);
+                log::error!("{err}");
+            }
+        }
+
+        self.cert_status.secret_text =
+            String::from_utf8(try_or_return!(self, ui, cert.as_tsk().armored().to_vec()))
+                .unwrap_or_default();
+
+        match CertParser::from_reader(self.cert_status.secret_text.as_bytes())
+            .map_err(|e| e.to_string())
+        {
+            Ok(cert) => {
+                for cert in cert {
+                    self.priv_certs.push(match cert {
+                        Ok(cert) => cert,
+                        Err(err) => {
+                            self.err = err.to_string();
+                            log::error!("{err}");
+                            break;
+                        }
+                    });
+                }
+            }
+            Err(err) => {
+                self.err.clone_from(&err);
+                log::error!("{err}");
+            }
+        }
+    }
+
+    pub fn display_certs(&mut self, ui: &mut Ui) {
+        let cert_text = self.cert_status.cert_text.clone();
+        let secret_text = self.cert_status.secret_text.clone();
+        egui::containers::Window::new("Certs").vscroll(true).show(ui.ctx(), |ui| {
+            egui::ScrollArea::horizontal().show(ui, |ui| {
+                ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the private cert.\n");
+                ui.label(egui::RichText::new(format!("Certificate: \n{cert_text}")).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
+                ui.label(egui::RichText::new(format!("Private Key: \n{secret_text}")).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
+                ui.horizontal(|ui| {
+                    if ui.button("Dismiss").clicked() {
+                        self.cert_status.show_window = false;
+                    }
+                    egui::containers::ComboBox::from_label("Download Format").selected_text(format!("{:?}", self.cert_status.bin_or_ask)).show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Bin, "Binary");
+                        ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Asc, "ASK");
+                    });
+                    if ui.button("Download").clicked() {
+                        if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
+                            let cert_obj = try_or_return!(self, ui, Self::str_to_cert_obj(&self.cert_status.cert_text.clone()));
+                            let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, &cert_obj));
+
+                            try_or_return!(self, ui, platform::write_file("PublicKey", &bin_dat));
+
+                            let cert_obj = try_or_return!(self, ui, Self::str_to_cert_obj(&self.cert_status.secret_text.clone()));
+                            let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, &cert_obj));
+
+                            try_or_return!(self, ui, platform::write_file("SecretKey", &bin_dat));
+                        } else {
+                            try_or_return!(self, ui, platform::write_file("PublicKey.asc", &self.cert_status.cert_text.as_bytes().to_vec()));
+                            try_or_return!(self, ui, platform::write_file("SecretKey.asc", &self.cert_status.secret_text.as_bytes().to_vec()));
+                        }
+                    }
+                });
+            });
+        });
     }
 }

@@ -32,7 +32,7 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
                 log::error!("Gpg exited unsucsessfully: {possible_error}");
             }
         }
-        Err(err) => log::error!("Error checking status: {err}")
+        Err(err) => log::error!("Error checking status: {err}"),
     }
     let mut certs = vec![];
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
@@ -53,7 +53,7 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
                 log::error!("Gpg exited unsucsessfully: {possible_error}");
             }
         }
-        Err(err) => log::error!("Error checking status: {err}")
+        Err(err) => log::error!("Error checking status: {err}"),
     }
     let mut priv_certs = vec![];
     for cert in CertParser::from_reader(armored_output.as_bytes()).map_err(|e| e.to_string())? {
@@ -68,7 +68,7 @@ pub fn get_certs(_: &str, _: &str) -> Result<(Vec<Cert>, Vec<Cert>), String> {
 
 impl MyApp {
     pub fn get_and_display_certs(&mut self, ui: &mut Ui) {
-        if !self.certs.is_empty() || !self.priv_certs.is_empty() {
+        if !self.certs.is_empty() || !self.priv_certs.is_empty() || self.gpg_errored {
             return;
         }
 

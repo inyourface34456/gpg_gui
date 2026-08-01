@@ -1,5 +1,10 @@
+use sequoia_openpgp::Cert;
+use sequoia_openpgp::cert::CertBuilder;
 use sequoia_openpgp::cert::CipherSuite as Cs;
+use sequoia_openpgp::packet::Signature;
+use sequoia_openpgp::types::KeyFlags;
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 #[derive(Serialize, Deserialize, Default, Debug, PartialEq, Clone, Copy)]
 pub enum CipherSuite {
@@ -54,8 +59,10 @@ impl Subkeys {
             Self::TransportEncryption(_) => Self::TransportEncryption(expire),
         };
     }
+}
 
-    pub fn get_mut_ref(&mut self) -> &mut Option<ExpireTime> {
+impl AsMut<Option<ExpireTime>> for Subkeys {
+    fn as_mut(&mut self) -> &mut Option<ExpireTime> {
         match self {
             Self::Authentcation(a)
             | Self::Signing(a)
@@ -223,5 +230,64 @@ impl Default for CertStatus {
             encrypt_sign: (CipherSuite::Cv25519, CipherSuite::Cv25519),
             indvidual_expire: false,
         }
+    }
+}
+
+impl CertStatus {
+    pub fn generate_certs(
+        &mut self,
+    ) -> Option<Result<(Cert, Signature), sequoia_openpgp::anyhow::Error>> {
+        let result;
+        let mut cert_builder;
+        if self.expire_date.is_none() {
+            cert_builder = CertBuilder::new();
+        } else {
+            let expire_time = match self.expire_date {
+                Some(time) => time.into(),
+                None => unreachable!(),
+            };
+            cert_builder =
+                CertBuilder::new().set_validity_period(std::time::Duration::from_secs(expire_time));
+        }
+
+        cert_builder = cert_builder.set_password(Some(self.password.clone().into()));
+
+        for i in &self.userid {
+            cert_builder = cert_builder.add_userid(i.clone().replace('\u{00A0}', " "));
+        }
+
+        let (sign, encrypt): (Cs, Cs) = (self.encrypt_sign.0.into(), self.encrypt_sign.1.into());
+        cert_builder = cert_builder.set_cipher_suite(sign);
+
+        for subkey_type in &self.desired_subkeys {
+            cert_builder = match subkey_type {
+                Subkeys::Authentcation(v) => cert_builder.add_subkey(
+                    KeyFlags::empty().set_authentication(),
+                    v.map(Into::into),
+                    Some(sign),
+                ),
+                Subkeys::Signing(v) => cert_builder.add_subkey(
+                    KeyFlags::empty().set_signing(),
+                    v.map(Into::into),
+                    Some(sign),
+                ),
+                Subkeys::StorageEncryption(v) => cert_builder.add_subkey(
+                    KeyFlags::empty().set_storage_encryption(),
+                    v.map(Into::into),
+                    Some(encrypt),
+                ),
+                Subkeys::TransportEncryption(v) => cert_builder.add_subkey(
+                    KeyFlags::empty().set_transport_encryption(),
+                    v.map(Into::into),
+                    Some(encrypt),
+                ),
+            };
+        }
+
+        result = Some(cert_builder.generate());
+        self.password.zeroize();
+        self.password2.zeroize();
+        self.show_window = true;
+        result
     }
 }

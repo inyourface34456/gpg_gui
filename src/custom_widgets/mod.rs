@@ -1,6 +1,14 @@
-pub mod add_userids;
-pub mod expire_time_selector;
-pub mod multi_select;
+mod add_userids;
+mod expire_time_selector;
+mod multi_select;
+mod password;
+mod style;
+
+pub use add_userids::AddUserids;
+pub use expire_time_selector::ExpireTimeSelector;
+pub use multi_select::MultiSelect;
+pub use password::PasswordViewer;
+pub use style::StyleEditor;
 
 // pub struct ExpireTimeSelector<'a> {
 //     id_salt: &'a str, // needed if you show more than one on the same screen

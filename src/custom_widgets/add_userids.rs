@@ -117,7 +117,7 @@ impl Widget for AddUserids<'_> {
 
                 let t = ui.button("Remove Current Userid");
 
-                if t.clicked() && self.userid.len() > 1 {
+                if t.clicked() && self.userid.len() > 1 && *self.editing_userid != 0 {
                     self.userid.remove(*self.editing_userid);
                     *self.editing_userid -= 1;
                     let userid_parts =

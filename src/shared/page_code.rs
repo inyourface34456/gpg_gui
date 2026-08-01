@@ -1,19 +1,12 @@
-use crate::custom_widgets::add_userids::AddUserids;
-use crate::custom_widgets::expire_time_selector::ExpireTimeSelector;
-use crate::custom_widgets::multi_select::MultiSelect;
-use crate::shared::helpers;
+use crate::MyApp;
+use crate::custom_widgets::AddUserids;
+use crate::custom_widgets::ExpireTimeSelector;
+use crate::custom_widgets::MultiSelect;
+use crate::custom_widgets::PasswordViewer;
+use crate::selectable_values;
 use crate::shared::new_cert_status;
-use crate::{MyApp, platform};
-use crate::{selectable_values, try_or_return};
 use egui::Ui;
-use new_cert_status::{CipherSuite, Subkeys};
-use sequoia_openpgp::Packet;
-use sequoia_openpgp::cert::{CertBuilder, CertParser, CipherSuite as Cs};
-use sequoia_openpgp::parse::Parse;
-use sequoia_openpgp::serialize::SerializeInto;
-use sequoia_openpgp::types::KeyFlags;
-use zeroize::Zeroize;
-use zxcvbn::zxcvbn;
+use new_cert_status::CipherSuite;
 
 impl MyApp {
     pub fn debug(&mut self, ui: &mut Ui) {
@@ -178,7 +171,7 @@ impl MyApp {
             for i in &mut self.cert_status.desired_subkeys {
                 ui.add(ExpireTimeSelector::new(
                     &format!("Expire Time for {i} Subkey"),
-                    i.get_mut_ref(),
+                    i.as_mut(),
                 ));
             }
             ui.add(ExpireTimeSelector::new(
@@ -198,189 +191,28 @@ impl MyApp {
 
         ui.add_space(5.);
 
-        ui.horizontal(|ui| {
-            ui.label("Password*: ");
-            ui.add(
-                egui::TextEdit::singleline(&mut self.cert_status.password)
-                    .password(!self.cert_status.password_vis.0)
-                    .hint_text("Password"),
-            );
-            ui.checkbox(&mut self.cert_status.password_vis.0, "Show Password");
-        });
-
-        ui.horizontal(|ui| {
-            ui.label("Confirm Password*: ");
-            ui.add(
-                egui::TextEdit::singleline(&mut self.cert_status.password2)
-                    .password(!self.cert_status.password_vis.1)
-                    .hint_text("Password"),
-            );
-            ui.checkbox(&mut self.cert_status.password_vis.1, "Show Password");
-        });
-
-        let score = match zxcvbn(
-            &self.cert_status.password,
-            &[
-                &self.cert_status.comment,
-                &self.cert_status.email,
-                &self.cert_status.display_name,
-            ],
-        ) {
-            Ok(score) => score,
-            Err(_) => zxcvbn("a", &[]).expect("No idea how this can fail"),
-        };
-        let (label, color) = helpers::score_info(score.score());
-
-        ui.horizontal(|ui| {
-            ui.label("Password Strength");
-            let bar = egui::ProgressBar::new(f32::from(score.score()) / 4.)
-                .show_percentage()
-                .fill(color)
-                .desired_width(200.);
-            ui.add(bar);
-            ui.colored_label(color, label);
-        });
-
-        if let Some(feedback) = score.feedback() {
-            if let Some(warning) = feedback.warning() {
-                ui.label(format!("Warning: {warning}"));
-            }
-            for sugestion in feedback.suggestions() {
-                ui.label(format!("Suggestion: {sugestion}"));
-            }
-        }
-
-        if !self.cert_status.password2.is_empty()
-            && self.cert_status.password != self.cert_status.password2
-        {
-            ui.label(
-                egui::RichText::new("Password does not match!")
-                    .color(egui::Color32::from_rgb(255, 0, 0)),
-            );
-        }
+        ui.add(PasswordViewer::new(
+            "a",
+            &mut self.cert_status.password,
+            &mut self.cert_status.password2,
+            &mut self.cert_status.password_vis,
+            &self.cert_status.email,
+            &self.cert_status.comment,
+            &self.cert_status.display_name,
+        ));
 
         if !self.cert_status.display_name.is_empty()
             && !self.cert_status.password.is_empty()
             && self.cert_status.password == self.cert_status.password2
+            // important that this is the last line, otherwise the button will show up all of the time
+            && ui.button("Generate Certificate").clicked()
         {
-            let mut result = None;
-            if ui.button("Generate Certificate").clicked() {
-                let mut cert_builder;
-                if self.cert_status.expire_date.is_none() {
-                    cert_builder = CertBuilder::new();
-                } else {
-                    let expire_time = match self.cert_status.expire_date {
-                        Some(time) => time.into(),
-                        None => unreachable!(),
-                    };
-                    cert_builder = CertBuilder::new()
-                        .set_validity_period(std::time::Duration::from_secs(expire_time));
-                }
-
-                cert_builder =
-                    cert_builder.set_password(Some(self.cert_status.password.clone().into()));
-
-                for i in &self.cert_status.userid {
-                    cert_builder = cert_builder.add_userid(i.clone().replace('\u{00A0}', " "));
-                }
-
-                let (sign, encrypt): (Cs, Cs) = (
-                    self.cert_status.encrypt_sign.0.into(),
-                    self.cert_status.encrypt_sign.1.into(),
-                );
-                cert_builder = cert_builder.set_cipher_suite(sign);
-
-                for subkey_type in &self.cert_status.desired_subkeys {
-                    cert_builder = match subkey_type {
-                        Subkeys::Authentcation(v) => cert_builder.add_subkey(
-                            KeyFlags::empty().set_authentication(),
-                            v.map(Into::into),
-                            Some(sign),
-                        ),
-                        Subkeys::Signing(v) => cert_builder.add_subkey(
-                            KeyFlags::empty().set_signing(),
-                            v.map(Into::into),
-                            Some(sign),
-                        ),
-                        Subkeys::StorageEncryption(v) => cert_builder.add_subkey(
-                            KeyFlags::empty().set_storage_encryption(),
-                            v.map(Into::into),
-                            Some(encrypt),
-                        ),
-                        Subkeys::TransportEncryption(v) => cert_builder.add_subkey(
-                            KeyFlags::empty().set_transport_encryption(),
-                            v.map(Into::into),
-                            Some(encrypt),
-                        ),
-                    };
-                }
-
-                result = Some(cert_builder.generate());
-                self.cert_status.password.zeroize();
-                self.cert_status.password2.zeroize();
-                self.cert_status.show_window = true;
-            }
+            let result = self.cert_status.generate_certs();
 
             if let Some(result) = result {
                 match result {
                     Ok((cert, rev)) => {
-                        let cert =
-                            try_or_return!(self, ui, cert.insert_packets(vec![Packet::from(rev)]))
-                                .0;
-
-                        let armored: Vec<u8> = try_or_return!(self, ui, cert.armored().to_vec());
-
-                        self.cert_status.cert_text =
-                            try_or_return!(self, ui, String::from_utf8(armored));
-
-                        match CertParser::from_reader(self.cert_status.cert_text.as_bytes())
-                            .map_err(|e| e.to_string())
-                        {
-                            Ok(cert) => {
-                                for cert in cert {
-                                    self.certs.push(match cert {
-                                        Ok(cert) => cert,
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{err}");
-                                            break;
-                                        }
-                                    });
-                                }
-                            }
-                            Err(err) => {
-                                self.err.clone_from(&err);
-                                log::error!("{err}");
-                            }
-                        }
-
-                        self.cert_status.secret_text = String::from_utf8(try_or_return!(
-                            self,
-                            ui,
-                            cert.as_tsk().armored().to_vec()
-                        ))
-                        .unwrap_or_default();
-
-                        match CertParser::from_reader(self.cert_status.secret_text.as_bytes())
-                            .map_err(|e| e.to_string())
-                        {
-                            Ok(cert) => {
-                                for cert in cert {
-                                    self.priv_certs.push(match cert {
-                                        Ok(cert) => cert,
-                                        Err(err) => {
-                                            self.err = err.to_string();
-                                            log::error!("{err}");
-                                            break;
-                                        }
-                                    });
-                                }
-                            }
-                            Err(err) => {
-                                self.err.clone_from(&err);
-                                log::error!("{err}");
-                            }
-                        }
+                        self.handle_certs(cert, rev, ui);
                     }
                     Err(err) => {
                         self.err = err.to_string();
@@ -394,40 +226,7 @@ impl MyApp {
         // Immediate mode: redraw the window every frame it should be visible,
         // gated only by `show_window` (not tied to the click event).
         if self.cert_status.show_window {
-            let cert_text = self.cert_status.cert_text.clone();
-            let secret_text = self.cert_status.secret_text.clone();
-            egui::containers::Window::new("Certs").vscroll(true).show(ui.ctx(), |ui| {
-                egui::ScrollArea::horizontal().show(ui, |ui| {
-                    ui.label("MAKE SURE TO WRITE THESE DOWN, THEY WILL NOT BE SHOWN AGAIN! Revocation certifacte is embedded in the private cert.\n");
-                    ui.label(egui::RichText::new(format!("Certificate: \n{cert_text}")).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
-                    ui.label(egui::RichText::new(format!("Private Key: \n{secret_text}")).font(egui::FontId::new(12., egui::FontFamily::Monospace)));
-                    ui.horizontal(|ui| {
-                        if ui.button("Dismiss").clicked() {
-                            self.cert_status.show_window = false;
-                        }
-                        egui::containers::ComboBox::from_label("Download Format").selected_text(format!("{:?}", self.cert_status.bin_or_ask)).show_ui(ui, |ui| {
-                            ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Bin, "Binary");
-                            ui.selectable_value(&mut self.cert_status.bin_or_ask, new_cert_status::BinOrAsc::Asc, "ASK");
-                        });
-                        if ui.button("Download").clicked() {
-                            if self.cert_status.bin_or_ask == new_cert_status::BinOrAsc::Bin {
-                                let cert_obj = try_or_return!(self, ui, Self::str_to_cert_obj(&self.cert_status.cert_text.clone()));
-                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, &cert_obj));
-
-                                try_or_return!(self, ui, platform::write_file("PublicKey", &bin_dat));
-
-                                let cert_obj = try_or_return!(self, ui, Self::str_to_cert_obj(&self.cert_status.secret_text.clone()));
-                                let bin_dat = try_or_return!(self, ui, self.cert_obj_to_bin(ui, &cert_obj));
-
-                                try_or_return!(self, ui, platform::write_file("SecretKey", &bin_dat));
-                            } else {
-                                try_or_return!(self, ui, platform::write_file("PublicKey.asc", &self.cert_status.cert_text.as_bytes().to_vec()));
-                                try_or_return!(self, ui, platform::write_file("SecretKey.asc", &self.cert_status.secret_text.as_bytes().to_vec()));
-                            }
-                        }
-                    });
-                });
-            });
+            self.display_certs(ui);
         }
     }
 
